@@ -208,7 +208,7 @@ const testValues: { value: unknown; passes: RuntypeName[] }[] = [
     passes: ['Person'],
   },
   { value: { a: '1', b: '2' }, passes: ['Dictionary'] },
-  { value: ['1', '2'], passes: ['ArrayString', 'NumberDictionary'] },
+  { value: ['1', '2'], passes: ['ArrayString'] },
   { value: ['1', 2], passes: [] },
   { value: [{ name: 'Jimmy', likes: [{ name: 'Peter', likes: [] }] }], passes: ['ArrayPerson'] },
   { value: [{ name: null, likes: [] }], passes: [] },

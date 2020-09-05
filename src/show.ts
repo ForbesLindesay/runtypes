@@ -38,10 +38,7 @@ const show = (needsParens: boolean, circular: Set<RuntypeBase<unknown>>) => (
       case 'array':
         return `${readonlyTag(refl)}${show(true, circular)(refl.element)}[]`;
       case 'dictionary':
-        return `{ [k in ${show(false, circular)(refl.key)}]: ${show(
-          false,
-          circular,
-        )(refl.value)} }`;
+        return `{ [_: ${show(false, circular)(refl.key)}]: ${show(false, circular)(refl.value)} }`;
       case 'record': {
         const keys = Object.keys(refl.fields);
         return keys.length
@@ -69,11 +66,14 @@ const show = (needsParens: boolean, circular: Set<RuntypeBase<unknown>>) => (
         return `InstanceOf<${name}>`;
       case 'brand':
         return show(needsParens, circular)(refl.entity);
+      case 'lazy':
+        return show(needsParens, circular)(refl.underlying());
+      default:
+        return assertNever(refl);
     }
   } finally {
     circular.delete(refl);
   }
-  throw Error('impossible');
 };
 
 export default show(false, new Set<Reflect>());
@@ -84,4 +84,8 @@ function partialTag({ isPartial }: { isPartial: boolean }): string {
 
 function readonlyTag({ isReadonly }: { isReadonly: boolean }): string {
   return isReadonly ? 'readonly ' : '';
+}
+
+function assertNever(_v: never): never {
+  throw new Error('This code should be unreachable');
 }
