@@ -7,18 +7,19 @@ import { Constraint } from './constraint';
 import { Lazy, lazyValue } from './lazy';
 import { Union } from './union';
 
-// TODO: do not explicitly pick 'tag' once it's part of RuntypeBase
 export type KeyRuntypeBaseWithoutLazyOrUnion =
-  | Pick<String, 'tag' | keyof RuntypeBase>
-  | Pick<Number, 'tag' | keyof RuntypeBase>
-  | Pick<Literal<string | number>, 'tag' | 'value' | keyof RuntypeBase>
-  | Pick<Constraint<KeyRuntypeBase, string | number>, 'tag' | 'underlying' | keyof RuntypeBase>;
+  | Pick<String, keyof RuntypeBase>
+  | Pick<Number, keyof RuntypeBase>
+  | Pick<Literal<string | number>, 'value' | keyof RuntypeBase>
+  | Pick<Constraint<KeyRuntypeBase, string | number>, 'underlying' | keyof RuntypeBase>;
+
 export type KeyRuntypeBaseWithoutLazy =
   | KeyRuntypeBaseWithoutLazyOrUnion
-  | Pick<Union<KeyRuntypeBaseWithoutUnion[]>, 'tag' | 'alternatives' | keyof RuntypeBase>;
+  | Pick<Union<KeyRuntypeBaseWithoutUnion[]>, 'alternatives' | keyof RuntypeBase>;
+
 export type KeyRuntypeBaseWithoutUnion =
   | KeyRuntypeBaseWithoutLazyOrUnion
-  | Pick<Lazy<KeyRuntypeBaseWithoutLazyOrUnion>, 'tag' | 'underlying' | keyof RuntypeBase>;
+  | Pick<Lazy<KeyRuntypeBaseWithoutLazyOrUnion>, 'underlying' | keyof RuntypeBase>;
 export type KeyRuntypeBase = KeyRuntypeBaseWithoutLazy | KeyRuntypeBaseWithoutUnion;
 
 function getExpectedBaseType(key: KeyRuntypeBase): 'string' | 'number' | 'mixed' {

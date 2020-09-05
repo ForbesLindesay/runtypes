@@ -1,11 +1,9 @@
 import { Runtype, Static, create, innerValidate, RuntypeBase } from '../runtype';
 import show from '../show';
 import { hasKey } from '../util';
-import { LiteralValue, isLiteralRuntype, Literal } from './literal';
+import { LiteralValue, isLiteralRuntype } from './literal';
 import { resolveLazyRuntype } from './lazy';
 import { isRecordRuntype } from './record';
-import { Number } from './number';
-import { String } from './string';
 
 export type StaticUnion<TAlternatives extends readonly RuntypeBase<unknown>[]> = {
   [key in keyof TAlternatives]: TAlternatives[key] extends RuntypeBase<unknown>
@@ -111,11 +109,3 @@ export type Matcher<A extends readonly RuntypeBase<unknown>[], Z> = (
     [key in keyof A]: A[key] extends RuntypeBase<infer Type> ? Type : unknown;
   }[number],
 ) => Z;
-
-const f = Union(Literal(42), Number, String);
-// const f = match(
-//   [Literal(42), fortyTwo => fortyTwo / 2],
-//   [Number, n => n + 9],
-//   [String, s => s.length * 2],
-// );
-// f(42) // => 21
