@@ -1,13 +1,14 @@
-import { Runtype, create } from '../runtype';
+import { RuntypeBase, RuntypeHelpers, create } from '../runtype';
 
-interface Sym extends Runtype<symbol> {
-  tag: 'symbol';
+export interface SymbolBase extends RuntypeBase<symbol> {
+  readonly tag: 'symbol';
 }
+interface Sym extends RuntypeHelpers<symbol>, SymbolBase {}
 
 /**
  * Validates that a value is a symbol.
  */
-const Sym = create<Sym>(
+const Sym: Sym = create<Sym>(
   value =>
     typeof value === 'symbol'
       ? { success: true, value }

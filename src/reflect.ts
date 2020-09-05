@@ -1,37 +1,82 @@
-import { Runtype } from './runtype';
+import { ReadonlyArrayBase, ArrayBase } from './types/array';
+import { BooleanBase } from './types/boolean';
+import { BrandBase } from './types/brand';
+import { ConstraintBase } from './types/constraint';
+import { DictionaryBase } from './types/dictionary';
+import { FunctionBase } from './types/function';
+import { InstanceOfBase } from './types/instanceof';
+import { IntersectBase } from './types/intersect';
+import { LazyBase } from './types/lazy';
 import { LiteralBase } from './types/literal';
-import { ConstraintCheck } from './types/constraint';
-import { Constructor } from './types/instanceof';
+import { NeverBase } from './types/never';
+import { NumberBase } from './types/number';
+import { InternalRecordBase } from './types/record';
+import { StringBase } from './types/string';
+import { SymbolBase } from './types/symbol';
+import { TupleBase } from './types/tuple';
+import { UnionBase } from './types/union';
+import { UnknownBase } from './types/unknown';
+import { RuntypeBase } from './runtype';
 
-export type Reflect =
-  | ({ tag: 'unknown' } & Runtype)
-  | ({ tag: 'never' } & Runtype<never>)
-  | ({ tag: 'void' } & Runtype<void>)
-  | ({ tag: 'boolean' } & Runtype<boolean>)
-  | ({ tag: 'number' } & Runtype<number>)
-  | ({ tag: 'string' } & Runtype<string>)
-  | ({ tag: 'symbol' } & Runtype<symbol>)
-  | ({ tag: 'literal'; value: LiteralBase } & Runtype<LiteralBase>)
-  | ({ tag: 'array'; element: Reflect; isReadonly: boolean } & Runtype<ReadonlyArray<unknown>>)
-  | ({
-      tag: 'record';
-      fields: { [_: string]: Reflect };
-      isPartial: boolean;
-      isReadonly: boolean;
-    } & Runtype<{ readonly [_ in string]: unknown }>)
-  | ({ tag: 'dictionary'; key: 'string' | 'number'; value: Reflect } & Runtype<{
-      [_: string]: unknown;
-    }>)
-  | ({ tag: 'tuple'; components: Reflect[] } & Runtype<unknown[]>)
-  | ({ tag: 'union'; alternatives: Reflect[] } & Runtype)
-  | ({ tag: 'intersect'; intersectees: Reflect[] } & Runtype)
-  | ({ tag: 'function' } & Runtype<(...args: any[]) => any>)
-  | ({
-      tag: 'constraint';
-      underlying: Reflect;
-      constraint: ConstraintCheck<Runtype<never>>;
-      args?: any;
-      name?: string;
-    } & Runtype)
-  | ({ tag: 'instanceof'; ctor: Constructor<unknown> } & Runtype)
-  | ({ tag: 'brand'; brand: string; entity: Reflect } & Runtype);
+export type ReflectWithoutLazy =
+  | ReadonlyArrayBase
+  | ArrayBase
+  | BooleanBase
+  | BrandBase
+  | ConstraintBase<Reflect, unknown>
+  | DictionaryBase
+  | FunctionBase
+  | InstanceOfBase
+  | IntersectBase
+  | LiteralBase
+  | NeverBase
+  | NumberBase
+  | InternalRecordBase
+  | StringBase
+  | SymbolBase
+  | TupleBase
+  | UnionBase
+  | UnknownBase;
+export type Reflect = ReflectWithoutLazy | LazyBase;
+export function canReflect(runtype: RuntypeBase<unknown>): runtype is Reflect {
+  // TODO: check it's a valid tag?
+  return 'tag' in runtype;
+}
+export function reflect<TTag extends Reflect['tag']>(
+  runtype: RuntypeBase<unknown>,
+  tag: TTag,
+): runtype is Extract<Reflect, { readonly tag: TTag }> {
+  return canReflect(runtype) && runtype.tag === tag;
+}
+// | Unknown
+// | Never
+// | Void
+// | Boolean
+// | Number
+// | String
+// | Symbol
+// | Literal<LiteralBase>
+// | Array<Reflect, false>
+// | Array<Reflect, true>;
+// | ({
+//     tag: 'record';
+//     fields: { [_: string]: Reflect };
+//     isPartial: boolean;
+//     isReadonly: boolean;
+//   } & RuntypeBase<{ readonly [_ in string]: unknown }>)
+// | ({ tag: 'dictionary'; key: 'string' | 'number'; value: Reflect } & Runtype<{
+//     [_: string]: unknown;
+//   }>)
+// | ({ tag: 'tuple'; components: Reflect[] } & RuntypeBase<unknown[]>)
+// | ({ tag: 'union'; alternatives: Reflect[] } & RuntypeBase)
+// | ({ tag: 'intersect'; intersectees: Reflect[] } & RuntypeBase)
+// | ({ tag: 'function' } & RuntypeBase<(...args: any[]) => any>)
+// | ({
+//     tag: 'constraint';
+//     underlying: Reflect;
+//     constraint: ConstraintCheck<RuntypeBase<never>>;
+//     args?: any;
+//     name?: string;
+//   } & RuntypeBase)
+// | ({ tag: 'instanceof'; ctor: Constructor<unknown> } & RuntypeBase)
+// | ({ tag: 'brand'; brand: string; entity: Reflect } & RuntypeBase);

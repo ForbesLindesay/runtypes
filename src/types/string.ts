@@ -1,13 +1,15 @@
-import { Runtype, create } from '../runtype';
+import { RuntypeBase, create, RuntypeHelpers } from '../runtype';
 
-export interface String extends Runtype<string> {
-  tag: 'string';
+export interface StringBase extends RuntypeBase<string> {
+  readonly tag: 'string';
 }
+
+export interface String extends RuntypeHelpers<string>, StringBase {}
 
 /**
  * Validates that a value is a string.
  */
-export const String = create<String>(
+export const String: String = create<String>(
   value =>
     typeof value === 'string'
       ? { success: true, value }

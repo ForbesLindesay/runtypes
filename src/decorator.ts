@@ -1,4 +1,4 @@
-import { Runtype } from './runtype';
+import { Reflect } from './reflect';
 import { ValidationError } from './errors';
 
 type PropKey = string | symbol;
@@ -57,7 +57,7 @@ function getValidParameterIndices(target: any, propertyKey: PropKey, runtypeCoun
  * }
  * ```
  */
-export function checked(...runtypes: Runtype[]) {
+export function checked(...runtypes: Reflect[]) {
   if (runtypes.length === 0) {
     throw new Error('No runtype provided to `@checked`. Please remove the decorator.');
   }

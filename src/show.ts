@@ -1,7 +1,16 @@
 import { Reflect } from './index';
+import { RuntypeBase } from './runtype';
+import { canReflect } from './reflect';
 
-const show = (needsParens: boolean, circular: Set<Reflect>) => (refl: Reflect): string => {
+const show = (needsParens: boolean, circular: Set<RuntypeBase<unknown>>) => (
+  runtype: RuntypeBase<unknown>,
+): string => {
   const parenthesize = (s: string) => (needsParens ? `(${s})` : s);
+  if (!canReflect(runtype)) {
+    // TODO: what if `RuntypeBase` required an implementation of `show`?
+    return parenthesize(`CUSTOM TYPE`);
+  }
+  const refl = runtype;
 
   if (circular.has(refl)) {
     return parenthesize(`CIRCULAR ${refl.tag}`);
@@ -14,7 +23,6 @@ const show = (needsParens: boolean, circular: Set<Reflect>) => (refl: Reflect): 
       // Primitive types
       case 'unknown':
       case 'never':
-      case 'void':
       case 'boolean':
       case 'number':
       case 'string':
@@ -30,7 +38,10 @@ const show = (needsParens: boolean, circular: Set<Reflect>) => (refl: Reflect): 
       case 'array':
         return `${readonlyTag(refl)}${show(true, circular)(refl.element)}[]`;
       case 'dictionary':
-        return `{ [_: ${refl.key}]: ${show(false, circular)(refl.value)} }`;
+        return `{ [k in ${show(false, circular)(refl.key)}]: ${show(
+          false,
+          circular,
+        )(refl.value)} }`;
       case 'record': {
         const keys = Object.keys(refl.fields);
         return keys.length

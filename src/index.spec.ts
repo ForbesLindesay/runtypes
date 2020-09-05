@@ -12,6 +12,7 @@ import {
   Symbol as Sym,
   Literal,
   Array,
+  ReadonlyArray,
   Dictionary,
   Record,
   Partial as RTPartial,
@@ -53,7 +54,7 @@ type BarbellBall = [BarbellBall];
 const BarbellBall: Runtype<BarbellBall> = Lazy(() => Tuple(BarbellBall));
 
 type SRDict = { [_: string]: SRDict };
-const SRDict: Runtype<SRDict> = Lazy(() => Dictionary(SRDict));
+const SRDict: Runtype<SRDict> = Lazy(() => Dictionary(String, SRDict));
 const srDict: SRDict = {};
 srDict['self'] = srDict;
 
@@ -100,7 +101,7 @@ class SomeClassV2 {
     o !== null && typeof o === 'object' && o._someClassTag === SOMECLASS_TAG;
 }
 
-const runtypes = {
+const runtypes: { [key: string]: Runtype<unknown> } = {
   Unknown,
   Never,
   Undefined,
@@ -135,9 +136,9 @@ const runtypes = {
     x => x.length > 3 || `Length array is not greater 3`,
     { args: { tag: 'length', min: 3 } },
   ),
-  Dictionary: Dictionary(String),
-  NumberDictionary: Dictionary(String, 'number'),
-  DictionaryOfArrays: Dictionary(Array(Boolean)),
+  Dictionary: Dictionary(String, String),
+  NumberDictionary: Dictionary(Number, String),
+  DictionaryOfArrays: Dictionary(String, Array(Boolean)),
   InstanceOfSomeClass: InstanceOf(SomeClass),
   InstanceOfSomeOtherClass: InstanceOf(SomeOtherClass),
   CustomGuardConstraint: Unknown.withGuard(SomeClassV2.isSomeClass),
@@ -156,7 +157,7 @@ const runtypes = {
       name: 'SomeClass',
     },
   ),
-  DictionaryOfArraysOfSomeClass: Dictionary(Array(InstanceOf(SomeClass))),
+  DictionaryOfArraysOfSomeClass: Dictionary(String, Array(InstanceOf(SomeClass))),
   OptionalKey: Record({ foo: String, bar: Union(Number, Undefined) }),
   ReadonlyNumberArray: Array(Number).asReadonly(),
   ReadonlyRecord: Record({ foo: Number, bar: String }).asReadonly(),
@@ -409,18 +410,22 @@ describe('check errors', () => {
   });
 
   it('dictionary', () => {
-    assertThrows(null, Dictionary(String), 'Expected { [_: string]: string }, but was null');
+    assertThrows(
+      null,
+      Dictionary(String, String),
+      'Expected { [_: string]: string }, but was null',
+    );
   });
 
   it('dictionary invalid type', () => {
     assertThrows(
       undefined,
-      Dictionary(Record({ name: String })),
+      Dictionary(String, Record({ name: String })),
       'Expected { [_: string]: { name: string; } }, but was undefined',
     );
     assertThrows(
       1,
-      Dictionary(Record({ name: String })),
+      Dictionary(String, Record({ name: String })),
       'Expected { [_: string]: { name: string; } }, but was number',
     );
   });
@@ -428,7 +433,7 @@ describe('check errors', () => {
   it('dictionary complex', () => {
     assertThrows(
       { foo: { name: false } },
-      Dictionary(Record({ name: String })),
+      Dictionary(String, Record({ name: String })),
       'Expected string, but was boolean in foo.name',
       'foo.name',
     );
@@ -437,7 +442,7 @@ describe('check errors', () => {
   it('string dictionary', () => {
     assertThrows(
       { foo: 'bar', test: true },
-      Dictionary(String),
+      Dictionary(String, String),
       'Expected string, but was boolean in test',
       'test',
     );
@@ -446,7 +451,7 @@ describe('check errors', () => {
   it('number dictionary', () => {
     assertThrows(
       { 1: 'bar', 2: 20 },
-      Dictionary(String, 'number'),
+      Dictionary(Number, String),
       'Expected string, but was number in 2',
       '2',
     );
@@ -634,15 +639,15 @@ describe('reflection', () => {
   });
 
   it('string dictionary', () => {
-    const Rec = Dictionary(Unknown);
+    const Rec = Dictionary(String, Unknown);
     expectLiteralField(Rec, 'tag', 'dictionary');
-    expectLiteralField(Rec, 'key', 'string');
+    expectLiteralField(Rec.key, 'tag', 'string');
   });
 
   it('number dictionary', () => {
-    const Rec = Dictionary(Unknown, 'number');
+    const Rec = Dictionary(Number, Unknown);
     expectLiteralField(Rec, 'tag', 'dictionary');
-    expectLiteralField(Rec, 'key', 'number');
+    expectLiteralField(Rec.key, 'tag', 'number');
   });
 
   it('record', () => {
@@ -691,8 +696,9 @@ describe('reflection', () => {
 
   it('lazy', () => {
     const L = Lazy(() => X);
-    expectLiteralField(L, 'tag', 'literal');
-    expectLiteralField(L, 'value', 'x');
+    expectLiteralField(L, 'tag', 'lazy');
+    expectLiteralField(L.underlying(), 'tag', 'literal');
+    expectLiteralField(L.underlying(), 'value', 'x');
   });
 
   it('constraint', () => {
@@ -705,7 +711,7 @@ describe('reflection', () => {
   it('instanceof', () => {
     class Test {}
     expectLiteralField(InstanceOf(Test), 'tag', 'instanceof');
-    expectLiteralField(Dictionary(Array(InstanceOf(Test))), 'tag', 'dictionary');
+    expectLiteralField(Dictionary(String, Array(InstanceOf(Test))), 'tag', 'dictionary');
   });
 
   it('brand', () => {
@@ -747,8 +753,8 @@ describe('change static type with Constraint', () => {
     | String
     | Sym
     | Literal<boolean | number | string>
-    | Array<Reflect, false>
-    | Array<Reflect, true>
+    | Array<Reflect>
+    | ReadonlyArray<Reflect>
     | Record<{ [_ in string]: Reflect }, false>
     | Record<{ [_ in string]: Reflect }, true>
     | RTPartial<{ [_ in string]: Reflect }, false>
@@ -785,7 +791,7 @@ describe('change static type with Constraint', () => {
       check<typeof X.value>(X);
       break;
     case 'array':
-      check<ReadonlyArray<Static<typeof X.element>>>(X);
+      check<readonly Static<typeof X.element>[]>(X);
       break;
     case 'record':
       check<{ readonly [K in keyof typeof X.fields]: Static<typeof X.fields[K]> }>(X);

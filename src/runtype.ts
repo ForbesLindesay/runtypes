@@ -1,12 +1,23 @@
 import { Result, Union, Intersect, Constraint, ConstraintCheck, Brand } from './index';
-import { Reflect } from './reflect';
 import show from './show';
 import { ValidationError } from './errors';
+import { Reflect } from './reflect';
 
 /**
  * A runtype determines at runtime whether a value conforms to a type specification.
  */
 export interface RuntypeBase<A = unknown> {
+  /**
+   * Validates that a value conforms to this type, and returns a result indicating
+   * success or failure (does not throw).
+   */
+  validate(x: any): Result<A>;
+}
+
+/**
+ * A runtype determines at runtime whether a value conforms to a type specification.
+ */
+export interface RuntypeHelpers<A = unknown> extends RuntypeBase<A> {
   /**
    * Verifies that a value conforms to this runtype. When given a value that does
    * not conform to the runtype, throws an exception.
@@ -20,37 +31,19 @@ export interface RuntypeBase<A = unknown> {
   check(x: any): A;
 
   /**
-   * Validates that a value conforms to this type, and returns a result indicating
-   * success or failure (does not throw).
-   */
-  validate(x: any): Result<A>;
-
-  /**
    * A type guard for this runtype.
    */
   guard(x: any): x is A;
 
   /**
-   * Convert this to a Reflect, capable of introspecting the structure of the type.
-   */
-  readonly reflect: Reflect;
-
-  /* @internal */ readonly _falseWitness: A;
-}
-
-/**
- * A runtype determines at runtime whether a value conforms to a type specification.
- */
-export interface Runtype<A = unknown> extends RuntypeBase<A> {
-  /**
    * Union this Runtype with another.
    */
-  Or<B extends Runtype>(B: B): Union<[this, B]>;
+  Or<B extends Reflect>(B: B): Union<[this, B]>;
 
   /**
    * Intersect this Runtype with another.
    */
-  And<B extends Runtype>(B: B): Intersect<[this, B]>;
+  And<B extends Reflect>(B: B): Intersect<[this, B]>;
 
   /**
    * Use an arbitrary constraint function to validate a runtype, and optionally
@@ -94,17 +87,36 @@ export interface Runtype<A = unknown> extends RuntypeBase<A> {
    * Adds a brand to the type.
    */
   withBrand<B extends string>(brand: B): Brand<B, this>;
+
+  // case<Result>(fn: (value: A) => Result): PairCase<A, Result>;
 }
+
+/**
+ * A runtype determines at runtime whether a value conforms to a type specification.
+ */
+export type Runtype<A = unknown> = RuntypeHelpers<A>;
 
 /**
  * Obtains the static type associated with a Runtype.
  */
-export type Static<A extends RuntypeBase> = A['_falseWitness'];
+export type Static<A extends RuntypeBase<any>> = A extends RuntypeBase<infer T> ? T : unknown;
 
-export function create<A extends Runtype>(
-  validate: (x: any, visited: VisitedState) => Result<Static<A>>,
-  A: any,
-): A {
+export function create<TConfig extends RuntypeBase<any>>(
+  validate: (x: any, visited: VisitedState) => Result<Static<TConfig>>,
+  config: Omit<
+    TConfig,
+    | 'assert'
+    | 'check'
+    | 'guard'
+    | 'validate'
+    | 'Or'
+    | 'And'
+    | 'withConstraint'
+    | 'withGuard'
+    | 'withBrand'
+  >,
+): TConfig {
+  const A: any = config;
   A.check = check;
   A.assert = check;
   A._innerValidate = (value: any, visited: VisitedState) => {
@@ -131,34 +143,34 @@ export function create<A extends Runtype>(
     throw new ValidationError(validated.message, validated.key);
   }
 
-  function guard(x: any): x is A {
+  function guard(x: any): x is TConfig {
     return A.validate(x).success;
   }
 
-  function Or<B extends Runtype>(B: B): Union<[A, B]> {
+  function Or<B extends Reflect>(B: B): Union<[TConfig, B]> {
     return Union(A, B);
   }
 
-  function And<B extends Runtype>(B: B): Intersect<[A, B]> {
+  function And<B extends Reflect>(B: B): Intersect<[TConfig, B]> {
     return Intersect(A, B);
   }
 
-  function withConstraint<T extends Static<A>, K = unknown>(
-    constraint: ConstraintCheck<A>,
+  function withConstraint<T extends Static<TConfig>, K = unknown>(
+    constraint: ConstraintCheck<TConfig>,
     options?: { name?: string; args?: K },
-  ): Constraint<A, T, K> {
-    return Constraint<A, T, K>(A, constraint, options);
+  ): Constraint<TConfig, T, K> {
+    return Constraint<TConfig, T, K>(A, constraint, options);
   }
 
-  function withGuard<T extends Static<A>, K = unknown>(
-    guard: (x: Static<A>) => x is T,
+  function withGuard<T extends Static<TConfig>, K = unknown>(
+    guard: (x: Static<TConfig>) => x is T,
     options?: { name?: string; args?: K },
-  ): Constraint<A, T, K> {
-    return Constraint<A, T, K>(A, guard, options);
+  ): Constraint<TConfig, T, K> {
+    return Constraint<TConfig, T, K>(A, guard, options);
   }
 
-  function withBrand<B extends string>(B: B): Brand<B, A> {
-    return Brand(B, A);
+  function withBrand<B extends string>(B: B): Brand<B, TConfig> {
+    return Brand<B, TConfig>(B, A);
   }
 }
 

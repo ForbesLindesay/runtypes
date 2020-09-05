@@ -1,14 +1,19 @@
-import { Runtype, create } from '../runtype';
+import { RuntypeBase, create, RuntypeHelpers } from '../runtype';
 
 /**
  * The super type of all literal types.
  */
-export type LiteralBase = undefined | null | boolean | number | string;
+export type LiteralValue = undefined | null | boolean | number | string;
 
-export interface Literal<A extends LiteralBase> extends Runtype<A> {
-  tag: 'literal';
-  value: A;
+export interface LiteralBase<TLiteralValue extends LiteralValue = LiteralValue>
+  extends RuntypeBase<TLiteralValue> {
+  readonly tag: 'literal';
+  readonly value: TLiteralValue;
 }
+
+export interface Literal<TLiteralValue extends LiteralValue = LiteralValue>
+  extends RuntypeHelpers<TLiteralValue>,
+    LiteralBase<TLiteralValue> {}
 
 /**
  * Be aware of an Array of Symbols `[Symbol()]` which would throw "TypeError: Cannot convert a Symbol value to a string"
@@ -20,7 +25,7 @@ function literal(value: unknown) {
 /**
  * Construct a runtype for a type literal.
  */
-export function Literal<A extends LiteralBase>(valueBase: A): Literal<A> {
+export function Literal<A extends LiteralValue>(valueBase: A): Literal<A> {
   return create<Literal<A>>(
     value =>
       value === valueBase

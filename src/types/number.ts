@@ -1,13 +1,14 @@
-import { Runtype, create } from '../runtype';
+import { RuntypeHelpers, RuntypeBase, create } from '../runtype';
 
-export interface Number extends Runtype<number> {
-  tag: 'number';
+export interface NumberBase extends RuntypeBase<number> {
+  readonly tag: 'number';
 }
+export interface Number extends RuntypeHelpers<number>, NumberBase {}
 
 /**
  * Validates that a value is a number.
  */
-export const Number = create<Number>(
+export const Number: Number = create<Number>(
   value =>
     typeof value === 'number'
       ? { success: true, value }
