@@ -65,3 +65,8 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
 function Arr<TElement extends RuntypeBase<unknown>>(element: TElement): Arr<TElement> {
   return InternalArr(element, false);
 }
+export function ReadonlyArray<TElement extends RuntypeBase<unknown>>(
+  element: TElement,
+): ReadonlyArray<TElement> {
+  return InternalArr(element, true);
+}
