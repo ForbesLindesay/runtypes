@@ -1,4 +1,4 @@
-import { RuntypeBase, Static, create, innerValidate, RuntypeHelpers } from '../runtype';
+import { RuntypeBase, Static, create, innerValidate, Runtype } from '../runtype';
 import { String } from './string';
 import { Unknown } from './unknown';
 
@@ -8,7 +8,7 @@ export interface Constraint<
   TUnderlying extends RuntypeBase<unknown>,
   TConstrained extends Static<TUnderlying> = Static<TUnderlying>,
   TArgs = unknown
-> extends RuntypeHelpers<TConstrained> {
+> extends Runtype<TConstrained> {
   readonly tag: 'constraint';
   readonly underlying: TUnderlying;
   // See: https://github.com/Microsoft/TypeScript/issues/19746 for why this isn't just

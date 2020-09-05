@@ -1,9 +1,9 @@
-import { RuntypeBase, Static, create, RuntypeHelpers } from '../runtype';
+import { RuntypeBase, Static, create, Runtype } from '../runtype';
 
 export const RuntypeName = Symbol('RuntypeName');
 
 export interface Brand<B extends string, A extends RuntypeBase<unknown>>
-  extends RuntypeHelpers<
+  extends Runtype<
     Static<A> & {
       [RuntypeName]: B;
     }

@@ -1,6 +1,6 @@
-import { RuntypeHelpers, create } from '../runtype';
+import { Runtype, create } from '../runtype';
 
-interface Sym extends RuntypeHelpers<symbol> {
+interface Sym extends Runtype<symbol> {
   readonly tag: 'symbol';
 }
 

@@ -1,6 +1,6 @@
-import { RuntypeHelpers, create } from '../runtype';
+import { Runtype, create } from '../runtype';
 
-export interface Number extends RuntypeHelpers<number> {
+export interface Number extends Runtype<number> {
   readonly tag: 'number';
 }
 

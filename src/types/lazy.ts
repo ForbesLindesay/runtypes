@@ -1,7 +1,7 @@
-import { create, RuntypeBase, RuntypeHelpers, innerValidate, Static } from '../runtype';
+import { create, RuntypeBase, Runtype, innerValidate, Static } from '../runtype';
 
 export interface Lazy<TUnderlying extends RuntypeBase<unknown>>
-  extends RuntypeHelpers<Static<TUnderlying>> {
+  extends Runtype<Static<TUnderlying>> {
   readonly tag: 'lazy';
   readonly underlying: () => TUnderlying;
 }

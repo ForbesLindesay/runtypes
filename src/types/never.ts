@@ -1,6 +1,6 @@
-import { RuntypeHelpers, create } from '../runtype';
+import { Runtype, create } from '../runtype';
 
-export interface Never extends RuntypeHelpers<never> {
+export interface Never extends Runtype<never> {
   readonly tag: 'never';
 }
 

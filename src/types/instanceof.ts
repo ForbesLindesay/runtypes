@@ -1,10 +1,10 @@
-import { create, RuntypeHelpers } from '../runtype';
+import { create, Runtype } from '../runtype';
 
 export interface Constructor<V> {
   new (...args: any[]): V;
 }
 
-export interface InstanceOf<V = unknown> extends RuntypeHelpers<V> {
+export interface InstanceOf<V = unknown> extends Runtype<V> {
   readonly tag: 'instanceof';
   readonly ctor: Constructor<V>;
 }

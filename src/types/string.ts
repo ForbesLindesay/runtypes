@@ -1,6 +1,6 @@
-import { create, RuntypeHelpers } from '../runtype';
+import { create, Runtype } from '../runtype';
 
-export interface String extends RuntypeHelpers<string> {
+export interface String extends Runtype<string> {
   readonly tag: 'string';
 }
 

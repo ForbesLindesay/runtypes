@@ -1,15 +1,14 @@
-import { Static, create, innerValidate, RuntypeBase, RuntypeHelpers } from '../runtype';
+import { Static, create, innerValidate, RuntypeBase, Runtype } from '../runtype';
 
 export interface ReadonlyArray<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
-  extends RuntypeHelpers<readonly Static<E>[]> {
+  extends Runtype<readonly Static<E>[]> {
   readonly tag: 'array';
   readonly element: E;
   readonly isReadonly: true;
 }
 
 export { Arr as Array };
-interface Arr<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
-  extends RuntypeHelpers<Static<E>[]> {
+interface Arr<E extends RuntypeBase<unknown> = RuntypeBase<unknown>> extends Runtype<Static<E>[]> {
   readonly tag: 'array';
   readonly element: E;
   readonly isReadonly: false;

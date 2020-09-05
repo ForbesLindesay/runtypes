@@ -1,4 +1,4 @@
-import { Static, create, innerValidate, RuntypeBase, RuntypeHelpers } from '../runtype';
+import { Static, create, innerValidate, RuntypeBase, Runtype } from '../runtype';
 import { hasKey } from '../util';
 import show from '../show';
 
@@ -19,7 +19,7 @@ export interface InternalRecord<
   O extends RecordFields,
   IsPartial extends boolean,
   IsReadonly extends boolean
-> extends RuntypeHelpers<RecordStaticType<O, IsPartial, IsReadonly>> {
+> extends Runtype<RecordStaticType<O, IsPartial, IsReadonly>> {
   readonly tag: 'record';
   readonly fields: O;
   readonly isPartial: IsPartial;

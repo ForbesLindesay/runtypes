@@ -1,6 +1,6 @@
-import { create, RuntypeHelpers } from '../runtype';
+import { create, Runtype } from '../runtype';
 
-export interface Function extends RuntypeHelpers<(...args: any[]) => any> {
+export interface Function extends Runtype<(...args: any[]) => any> {
   readonly tag: 'function';
 }
 

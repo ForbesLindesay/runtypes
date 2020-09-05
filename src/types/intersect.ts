@@ -1,4 +1,4 @@
-import { Static, create, innerValidate, RuntypeBase, RuntypeHelpers } from '../runtype';
+import { Static, create, innerValidate, RuntypeBase, Runtype } from '../runtype';
 
 // We use the fact that a union of functions is effectively an intersection of parameters
 // e.g. to safely call (({x: 1}) => void | ({y: 2}) => void) you must pass {x: 1, y: 2}
@@ -12,7 +12,7 @@ export type StaticIntersect<TIntersectees extends readonly RuntypeBase<unknown>[
 
 export interface Intersect<
   TIntersectees extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
-> extends RuntypeHelpers<StaticIntersect<TIntersectees>> {
+> extends Runtype<StaticIntersect<TIntersectees>> {
   readonly tag: 'intersect';
   readonly intersectees: TIntersectees;
 }

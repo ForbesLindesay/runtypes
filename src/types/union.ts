@@ -1,4 +1,4 @@
-import { RuntypeHelpers, Static, create, innerValidate, RuntypeBase } from '../runtype';
+import { Runtype, Static, create, innerValidate, RuntypeBase } from '../runtype';
 import show from '../show';
 import { hasKey } from '../util';
 import { LiteralValue, isLiteralRuntype } from './literal';
@@ -12,7 +12,7 @@ export type StaticUnion<TAlternatives extends readonly RuntypeBase<unknown>[]> =
 }[number];
 
 export interface Union<TAlternatives extends readonly RuntypeBase<unknown>[]>
-  extends RuntypeHelpers<StaticUnion<TAlternatives>> {
+  extends Runtype<StaticUnion<TAlternatives>> {
   readonly tag: 'union';
   readonly alternatives: TAlternatives;
   match: Match<TAlternatives>;

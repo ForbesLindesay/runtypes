@@ -1,4 +1,4 @@
-import { create, Static, innerValidate, RuntypeBase, RuntypeHelpers } from '../runtype';
+import { create, Static, innerValidate, RuntypeBase, Runtype } from '../runtype';
 import show from '../show';
 import { String } from './string';
 import { Number } from './number';
@@ -41,7 +41,7 @@ function getExpectedBaseType(key: KeyRuntypeBase): 'string' | 'number' | 'mixed'
 }
 
 export interface Dictionary<K extends KeyRuntypeBase, V extends RuntypeBase<unknown>>
-  extends RuntypeHelpers<{ [_ in Static<K>]: Static<V> }>,
+  extends Runtype<{ [_ in Static<K>]: Static<V> }>,
     RuntypeBase<{ [_ in Static<K>]: Static<V> }> {
   readonly tag: 'dictionary';
   readonly key: K;

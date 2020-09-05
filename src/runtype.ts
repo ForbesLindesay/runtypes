@@ -22,7 +22,7 @@ export interface RuntypeBase<A = unknown> {
 /**
  * A runtype determines at runtime whether a value conforms to a type specification.
  */
-export interface RuntypeHelpers<A = unknown> extends RuntypeBase<A> {
+export interface Runtype<A = unknown> extends RuntypeBase<A> {
   /**
    * Verifies that a value conforms to this runtype. When given a value that does
    * not conform to the runtype, throws an exception.
@@ -95,11 +95,6 @@ export interface RuntypeHelpers<A = unknown> extends RuntypeBase<A> {
 
   // case<Result>(fn: (value: A) => Result): PairCase<A, Result>;
 }
-
-/**
- * A runtype determines at runtime whether a value conforms to a type specification.
- */
-export type Runtype<A = unknown> = RuntypeHelpers<A>;
 
 /**
  * Obtains the static type associated with a Runtype.

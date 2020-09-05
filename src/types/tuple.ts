@@ -1,4 +1,4 @@
-import { create, innerValidate, RuntypeBase, RuntypeHelpers } from '../runtype';
+import { create, innerValidate, RuntypeBase, Runtype } from '../runtype';
 import { Array as Arr } from './array';
 import { Unknown } from './unknown';
 
@@ -8,7 +8,7 @@ export type StaticTuple<TElements extends readonly RuntypeBase<unknown>[]> = {
 
 export interface Tuple<
   TElements extends readonly RuntypeBase<unknown>[] = readonly RuntypeBase<unknown>[]
-> extends RuntypeHelpers<StaticTuple<TElements>> {
+> extends Runtype<StaticTuple<TElements>> {
   readonly tag: 'tuple';
   readonly components: TElements;
 }

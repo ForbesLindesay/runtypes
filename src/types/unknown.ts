@@ -1,6 +1,6 @@
-import { RuntypeHelpers, create } from '../runtype';
+import { Runtype, create } from '../runtype';
 
-export interface Unknown extends RuntypeHelpers<unknown> {
+export interface Unknown extends Runtype<unknown> {
   readonly tag: 'unknown';
 }
 
