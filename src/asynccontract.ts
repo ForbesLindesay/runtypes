@@ -149,16 +149,22 @@ export function AsyncContract(...runtypes: Runtype[]) {
   const returnType = runtypes[lastIndex];
   return {
     enforce: (f: (...args: any[]) => any) => (...args: any[]) => {
-      if (args.length < argTypes.length)
-        throw new ValidationError(
-          `Expected ${argTypes.length} arguments but only received ${args.length}`,
+      if (args.length < argTypes.length) {
+        return Promise.reject(
+          new ValidationError(
+            `Expected ${argTypes.length} arguments but only received ${args.length}`,
+          ),
         );
+      }
       for (let i = 0; i < argTypes.length; i++) argTypes[i].check(args[i]);
       const returnedPromise = f(...args);
-      if (!(returnedPromise instanceof Promise))
-        throw new ValidationError(
-          `Expected function to return a promise, but instead got ${returnedPromise}`,
+      if (!(returnedPromise instanceof Promise)) {
+        return Promise.reject(
+          new ValidationError(
+            `Expected function to return a promise, but instead got ${returnedPromise}`,
+          ),
         );
+      }
       return returnedPromise.then(returnType.check);
     },
   };
