@@ -28,9 +28,17 @@ export interface InternalRecord<
   asReadonly(): IsPartial extends false ? Record<O, true> : Partial<O, true>;
 }
 
-export type Record<O extends RecordFields, RO extends boolean> = InternalRecord<O, false, RO>;
+export type Record<O extends RecordFields, IsReadonly extends boolean> = InternalRecord<
+  O,
+  false,
+  IsReadonly
+>;
 
-export type Partial<O extends RecordFields, RO extends boolean> = InternalRecord<O, true, RO>;
+export type Partial<O extends RecordFields, IsReadonly extends boolean> = InternalRecord<
+  O,
+  true,
+  IsReadonly
+>;
 
 export function isRecordRuntype(
   runtype: RuntypeBase,
