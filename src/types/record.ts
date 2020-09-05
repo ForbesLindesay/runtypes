@@ -15,23 +15,15 @@ type RecordStaticType<
   ? { -readonly [K in keyof O]?: Static<O[K]> }
   : { readonly [K in keyof O]?: Static<O[K]> };
 
-export interface InternalRecordBase<
-  O extends RecordFields = RecordFields,
-  IsPartial extends boolean = boolean,
-  IsReadonly extends boolean = boolean
-> extends RuntypeBase<RecordStaticType<O, IsPartial, IsReadonly>> {
-  readonly tag: 'record';
-  readonly fields: O;
-  readonly isPartial: IsPartial;
-  readonly isReadonly: IsReadonly;
-}
 export interface InternalRecord<
   O extends RecordFields,
   IsPartial extends boolean,
   IsReadonly extends boolean
->
-  extends RuntypeHelpers<RecordStaticType<O, IsPartial, IsReadonly>>,
-    InternalRecordBase<O, IsPartial, IsReadonly> {
+> extends RuntypeHelpers<RecordStaticType<O, IsPartial, IsReadonly>> {
+  readonly tag: 'record';
+  readonly fields: O;
+  readonly isPartial: IsPartial;
+  readonly isReadonly: IsReadonly;
   asPartial(): Partial<O, IsReadonly>;
   asReadonly(): IsPartial extends false ? Record<O, true> : Partial<O, true>;
 }
@@ -39,6 +31,14 @@ export interface InternalRecord<
 export type Record<O extends RecordFields, RO extends boolean> = InternalRecord<O, false, RO>;
 
 export type Partial<O extends RecordFields, RO extends boolean> = InternalRecord<O, true, RO>;
+
+export function isRecordRuntype(
+  runtype: RuntypeBase,
+): runtype is InternalRecord<RecordFields, boolean, boolean> {
+  return (
+    'tag' in runtype && (runtype as InternalRecord<RecordFields, boolean, boolean>).tag === 'record'
+  );
+}
 
 /**
  * Construct a record runtype from runtypes for its values.
@@ -70,7 +70,28 @@ export function InternalRecord<O extends RecordFields, Part extends boolean, RO 
 
       return { success: true, value: x };
     },
-    { tag: 'record', isPartial, isReadonly, fields, asPartial, asReadonly },
+    {
+      tag: 'record',
+      isPartial,
+      isReadonly,
+      fields,
+      asPartial,
+      asReadonly,
+      show({ showChild }) {
+        const keys = Object.keys(fields);
+        return keys.length
+          ? `{ ${keys
+              .map(
+                k =>
+                  `${isReadonly ? 'readonly ' : ''}${k}${isPartial ? '?' : ''}: ${showChild(
+                    fields[k],
+                    false,
+                  )};`,
+              )
+              .join(' ')} }`
+          : '{}';
+      },
+    },
   );
 
   return runtype;

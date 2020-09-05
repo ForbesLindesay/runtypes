@@ -1,9 +1,8 @@
-import { RuntypeHelpers, create, RuntypeBase } from '../runtype';
+import { RuntypeHelpers, create } from '../runtype';
 
-export interface NeverBase extends RuntypeBase<never> {
+export interface Never extends RuntypeHelpers<never> {
   readonly tag: 'never';
 }
-export interface Never extends RuntypeHelpers<never>, NeverBase {}
 
 /**
  * Validates nothing (unknown fails).

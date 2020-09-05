@@ -23,7 +23,6 @@ import {
   Lazy,
   Constraint,
   Contract,
-  Reflect,
   InstanceOf,
   Brand,
   Guard,
@@ -753,21 +752,22 @@ describe('change static type with Constraint', () => {
     | String
     | Sym
     | Literal<boolean | number | string>
-    | Array<Reflect>
-    | ReadonlyArray<Reflect>
-    | Record<{ [_ in string]: Reflect }, false>
-    | Record<{ [_ in string]: Reflect }, true>
-    | RTPartial<{ [_ in string]: Reflect }, false>
-    | RTPartial<{ [_ in string]: Reflect }, true>
-    | Tuple<[Reflect, Reflect]>
-    | Union<[Reflect, Reflect]>
-    | Intersect<[Reflect, Reflect]>
+    | Array<String | Number>
+    | ReadonlyArray<String | Number>
+    | Record<{ [_ in string]: String | Number }, false>
+    | Record<{ [_ in string]: String | Number }, true>
+    | RTPartial<{ [_ in string]: String | Number }, false>
+    | RTPartial<{ [_ in string]: String | Number }, true>
+    | Tuple<[String, String | Number]>
+    | Union<[String, String | Number]>
+    | Intersect<[String | Number, String | Number]>
     | Function
-    | Constraint<Reflect, any, any>
+    | Constraint<String | Number, any, any>
     | InstanceOf<Constructor<never>>
-    | Brand<string, Reflect>,
-): Reflect => {
+    | Brand<string, String | Number>,
+) => {
   const check = <A>(X: Runtype<A>): A => X.check({});
+
   switch (X.tag) {
     case 'unknown':
       check<unknown>(X);
@@ -794,7 +794,11 @@ describe('change static type with Constraint', () => {
       check<readonly Static<typeof X.element>[]>(X);
       break;
     case 'record':
-      check<{ readonly [K in keyof typeof X.fields]: Static<typeof X.fields[K]> }>(X);
+      if (X.isPartial) {
+        check<{ readonly [K in keyof typeof X.fields]?: Static<typeof X.fields[K]> }>(X);
+      } else {
+        check<{ readonly [K in keyof typeof X.fields]: Static<typeof X.fields[K]> }>(X);
+      }
       break;
     case 'tuple':
       check<[Static<typeof X.components[0]>, Static<typeof X.components[1]>]>(X);
@@ -818,8 +822,6 @@ describe('change static type with Constraint', () => {
       check<Static<typeof X.entity>>(X);
       break;
   }
-
-  return X;
 };
 
 function expectLiteralField<O, K extends keyof O, V extends O[K]>(o: O, k: K, v: V) {

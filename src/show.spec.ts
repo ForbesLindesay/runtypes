@@ -19,13 +19,13 @@ import {
   Function,
   Lazy,
   InstanceOf,
-  Reflect,
 } from '.';
 import show from './show';
+import { RuntypeBase } from './runtype';
 
 class TestClass {}
 
-const cases: [Reflect, string][] = [
+const cases: [RuntypeBase, string][] = [
   [Unknown, 'unknown'],
   [Never, 'never'],
   [Undefined, 'undefined'],

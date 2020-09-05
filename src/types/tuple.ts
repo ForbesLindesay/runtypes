@@ -6,16 +6,12 @@ export type StaticTuple<TElements extends readonly RuntypeBase<unknown>[]> = {
   [key in keyof TElements]: TElements[key] extends RuntypeBase<infer E> ? E : unknown;
 };
 
-export interface TupleBase<
+export interface Tuple<
   TElements extends readonly RuntypeBase<unknown>[] = readonly RuntypeBase<unknown>[]
-> extends RuntypeBase<StaticTuple<TElements>> {
+> extends RuntypeHelpers<StaticTuple<TElements>> {
   readonly tag: 'tuple';
   readonly components: TElements;
 }
-
-export interface Tuple<
-  TElements extends readonly RuntypeBase<unknown>[] = readonly RuntypeBase<unknown>[]
-> extends RuntypeHelpers<StaticTuple<TElements>>, TupleBase<TElements> {}
 
 /**
  * Construct a tuple runtype from runtypes for each of its elements.
@@ -56,6 +52,14 @@ export function Tuple<
 
       return { success: true, value: x };
     },
-    { tag: 'tuple', components },
+    {
+      tag: 'tuple',
+      components,
+      show({ showChild }) {
+        return `[${(components as readonly RuntypeBase<unknown>[])
+          .map(e => showChild(e, false))
+          .join(', ')}]`;
+      },
+    },
   );
 }

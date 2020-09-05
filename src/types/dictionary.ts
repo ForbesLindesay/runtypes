@@ -1,23 +1,24 @@
 import { create, Static, innerValidate, RuntypeBase, RuntypeHelpers } from '../runtype';
 import show from '../show';
-import { StringBase } from './string';
-import { NumberBase } from './number';
-import { LiteralBase } from './literal';
-import { ConstraintBase } from './constraint';
-import { LazyBase, lazyValue } from './lazy';
-import { UnionBase } from './union';
+import { String } from './string';
+import { Number } from './number';
+import { Literal } from './literal';
+import { Constraint } from './constraint';
+import { Lazy, lazyValue } from './lazy';
+import { Union } from './union';
 
+// TODO: do not explicitly pick 'tag' once it's part of RuntypeBase
 export type KeyRuntypeBaseWithoutLazyOrUnion =
-  | StringBase
-  | NumberBase
-  | LiteralBase<string | number>
-  | ConstraintBase<KeyRuntypeBase, string | number>;
+  | Pick<String, 'tag' | keyof RuntypeBase>
+  | Pick<Number, 'tag' | keyof RuntypeBase>
+  | Pick<Literal<string | number>, 'tag' | 'value' | keyof RuntypeBase>
+  | Pick<Constraint<KeyRuntypeBase, string | number>, 'tag' | 'underlying' | keyof RuntypeBase>;
 export type KeyRuntypeBaseWithoutLazy =
   | KeyRuntypeBaseWithoutLazyOrUnion
-  | UnionBase<KeyRuntypeBaseWithoutUnion[]>;
+  | Pick<Union<KeyRuntypeBaseWithoutUnion[]>, 'tag' | 'alternatives' | keyof RuntypeBase>;
 export type KeyRuntypeBaseWithoutUnion =
   | KeyRuntypeBaseWithoutLazyOrUnion
-  | LazyBase<KeyRuntypeBaseWithoutLazyOrUnion>;
+  | Pick<Lazy<KeyRuntypeBaseWithoutLazyOrUnion>, 'tag' | 'underlying' | keyof RuntypeBase>;
 export type KeyRuntypeBase = KeyRuntypeBaseWithoutLazy | KeyRuntypeBaseWithoutUnion;
 
 function getExpectedBaseType(key: KeyRuntypeBase): 'string' | 'number' | 'mixed' {
@@ -39,15 +40,6 @@ function getExpectedBaseType(key: KeyRuntypeBase): 'string' | 'number' | 'mixed'
   }
 }
 
-export interface DictionaryBase<
-  K extends KeyRuntypeBase = KeyRuntypeBase,
-  V extends RuntypeBase<unknown> = RuntypeBase<unknown>
-> extends RuntypeBase<unknown> {
-  readonly tag: 'dictionary';
-  readonly key: K;
-  readonly value: V;
-}
-
 export interface Dictionary<K extends KeyRuntypeBase, V extends RuntypeBase<unknown>>
   extends RuntypeHelpers<{ [_ in Static<K>]: Static<V> }>,
     RuntypeBase<{ [_ in Static<K>]: Static<V> }> {
@@ -55,11 +47,6 @@ export interface Dictionary<K extends KeyRuntypeBase, V extends RuntypeBase<unkn
   readonly key: K;
   readonly value: V;
 }
-
-export interface StringDictionary<V extends RuntypeBase<unknown>>
-  extends Dictionary<StringBase, V> {}
-export interface NumberDictionary<V extends RuntypeBase<unknown>>
-  extends Dictionary<NumberBase, V> {}
 
 /**
  * Construct a runtype for arbitrary dictionaries.
@@ -119,7 +106,14 @@ export function Dictionary<K extends KeyRuntypeBase, V extends RuntypeBase<unkno
 
       return { success: true, value: x };
     },
-    { tag: 'dictionary', key, value },
+    {
+      tag: 'dictionary',
+      key,
+      value,
+      show({ showChild }) {
+        return `{ [_: ${showChild(key, false)}]: ${showChild(value, false)} }`;
+      },
+    },
   );
   return runtype;
 }

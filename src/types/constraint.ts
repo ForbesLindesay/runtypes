@@ -4,11 +4,11 @@ import { Unknown } from './unknown';
 
 export type ConstraintCheck<A extends RuntypeBase<unknown>> = (x: Static<A>) => boolean | string;
 
-export interface ConstraintBase<
-  TUnderlying extends RuntypeBase<unknown> = RuntypeBase<unknown>,
+export interface Constraint<
+  TUnderlying extends RuntypeBase<unknown>,
   TConstrained extends Static<TUnderlying> = Static<TUnderlying>,
   TArgs = unknown
-> extends RuntypeBase<TConstrained> {
+> extends RuntypeHelpers<TConstrained> {
   readonly tag: 'constraint';
   readonly underlying: TUnderlying;
   // See: https://github.com/Microsoft/TypeScript/issues/19746 for why this isn't just
@@ -17,12 +17,6 @@ export interface ConstraintBase<
   readonly name?: string;
   readonly args?: TArgs;
 }
-
-export interface Constraint<
-  TUnderlying extends RuntypeBase<unknown>,
-  TConstrained extends Static<TUnderlying> = Static<TUnderlying>,
-  TArgs = unknown
-> extends RuntypeHelpers<TConstrained>, ConstraintBase<TUnderlying, TConstrained, TArgs> {}
 
 export function Constraint<
   TUnderlying extends RuntypeBase<unknown>,
@@ -53,6 +47,10 @@ export function Constraint<
       constraint,
       name: options && options.name,
       args: options && options.args,
+
+      show({ needsParens, showChild }) {
+        return (options && options.name) || showChild(underlying, needsParens);
+      },
     },
   );
 }

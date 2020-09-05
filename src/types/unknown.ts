@@ -1,9 +1,8 @@
-import { RuntypeBase, RuntypeHelpers, create } from '../runtype';
+import { RuntypeHelpers, create } from '../runtype';
 
-export interface UnknownBase extends RuntypeBase<unknown> {
+export interface Unknown extends RuntypeHelpers<unknown> {
   readonly tag: 'unknown';
 }
-export interface Unknown extends RuntypeHelpers<unknown>, UnknownBase {}
 
 /**
  * Validates anything, but provides no new type information about it.

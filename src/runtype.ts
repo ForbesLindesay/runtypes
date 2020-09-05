@@ -1,17 +1,22 @@
 import { Result, Union, Intersect, Constraint, ConstraintCheck, Brand } from './index';
 import show from './show';
 import { ValidationError } from './errors';
-import { Reflect } from './reflect';
 
 /**
  * A runtype determines at runtime whether a value conforms to a type specification.
  */
 export interface RuntypeBase<A = unknown> {
+  readonly tag: string;
   /**
    * Validates that a value conforms to this type, and returns a result indicating
    * success or failure (does not throw).
    */
   validate(x: any): Result<A>;
+  show?: (ctx: {
+    needsParens: boolean;
+    parenthesize: (str: string) => string;
+    showChild: (rt: RuntypeBase, needsParens: boolean) => string;
+  }) => string;
 }
 
 /**
@@ -38,12 +43,12 @@ export interface RuntypeHelpers<A = unknown> extends RuntypeBase<A> {
   /**
    * Union this Runtype with another.
    */
-  Or<B extends Reflect>(B: B): Union<[this, B]>;
+  Or<B extends RuntypeBase>(B: B): Union<[this, B]>;
 
   /**
    * Intersect this Runtype with another.
    */
-  And<B extends Reflect>(B: B): Intersect<[this, B]>;
+  And<B extends RuntypeBase>(B: B): Intersect<[this, B]>;
 
   /**
    * Use an arbitrary constraint function to validate a runtype, and optionally
@@ -147,11 +152,11 @@ export function create<TConfig extends RuntypeBase<any>>(
     return A.validate(x).success;
   }
 
-  function Or<B extends Reflect>(B: B): Union<[TConfig, B]> {
+  function Or<B extends RuntypeBase>(B: B): Union<[TConfig, B]> {
     return Union(A, B);
   }
 
-  function And<B extends Reflect>(B: B): Intersect<[TConfig, B]> {
+  function And<B extends RuntypeBase>(B: B): Intersect<[TConfig, B]> {
     return Intersect(A, B);
   }
 

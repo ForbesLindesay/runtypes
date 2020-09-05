@@ -2,11 +2,8 @@ import { RuntypeBase, Static, create, RuntypeHelpers } from '../runtype';
 
 export const RuntypeName = Symbol('RuntypeName');
 
-export interface BrandBase<
-  B extends string = string,
-  A extends RuntypeBase<unknown> = RuntypeBase<unknown>
->
-  extends RuntypeBase<
+export interface Brand<B extends string, A extends RuntypeBase<unknown>>
+  extends RuntypeHelpers<
     Static<A> & {
       [RuntypeName]: B;
     }
@@ -15,14 +12,6 @@ export interface BrandBase<
   readonly brand: B;
   readonly entity: A;
 }
-
-export interface Brand<B extends string, A extends RuntypeBase<unknown>>
-  extends RuntypeHelpers<
-      Static<A> & {
-        [RuntypeName]: B;
-      }
-    >,
-    BrandBase<B, A> {}
 
 export function Brand<B extends string, A extends RuntypeBase<unknown>>(brand: B, entity: A) {
   return create<Brand<B, A>>(
@@ -36,6 +25,9 @@ export function Brand<B extends string, A extends RuntypeBase<unknown>>(brand: B
       tag: 'brand',
       brand,
       entity,
+      show({ showChild, needsParens }) {
+        return showChild(entity, needsParens);
+      },
     },
   );
 }

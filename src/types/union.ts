@@ -1,25 +1,23 @@
-import { reflect } from '../reflect';
 import { RuntypeHelpers, Static, create, innerValidate, RuntypeBase } from '../runtype';
 import show from '../show';
 import { hasKey } from '../util';
-import { LiteralValue } from './literal';
+import { LiteralValue, isLiteralRuntype } from './literal';
+import { resolveLazyRuntype } from './lazy';
+import { isRecordRuntype } from './record';
 
 export type StaticUnion<TAlternatives extends readonly RuntypeBase<unknown>[]> = {
   [key in keyof TAlternatives]: TAlternatives[key] extends RuntypeBase<unknown>
     ? Static<TAlternatives[key]>
     : unknown;
 }[number];
-export interface UnionBase<
-  TAlternatives extends readonly RuntypeBase<unknown>[] = readonly RuntypeBase<unknown>[]
-> extends RuntypeBase<StaticUnion<TAlternatives>> {
+
+export interface Union<TAlternatives extends readonly RuntypeBase<unknown>[]>
+  extends RuntypeHelpers<StaticUnion<TAlternatives>> {
   readonly tag: 'union';
   readonly alternatives: TAlternatives;
-}
-export interface Union<
-  TAlternatives extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
-> extends RuntypeHelpers<StaticUnion<TAlternatives>>, UnionBase<TAlternatives> {
   match: Match<TAlternatives>;
 }
+
 /**
  * Construct a union runtype from runtypes for its alternatives.
  */
@@ -39,10 +37,11 @@ export function Union<
     (value, visited) => {
       const commonLiteralFields: { [key: string]: LiteralValue[] } = {};
       for (const alternative of alternatives) {
-        if (reflect(alternative, 'record')) {
-          for (const fieldName in alternative.fields) {
-            const field = alternative.fields[fieldName];
-            if (reflect(field, 'literal')) {
+        const alt = resolveLazyRuntype(alternative);
+        if (isRecordRuntype(alt)) {
+          for (const fieldName in alt.fields) {
+            const field = resolveLazyRuntype(alt.fields[fieldName]);
+            if (isLiteralRuntype(field)) {
               if (commonLiteralFields[fieldName]) {
                 if (commonLiteralFields[fieldName].every(value => value !== field.value)) {
                   commonLiteralFields[fieldName].push(field.value);
@@ -58,14 +57,15 @@ export function Union<
       for (const fieldName in commonLiteralFields) {
         if (commonLiteralFields[fieldName].length === alternatives.length) {
           for (const alternative of alternatives) {
-            if (reflect(alternative, 'record')) {
-              const field = alternative.fields[fieldName];
+            const alt = resolveLazyRuntype(alternative);
+            if (isRecordRuntype(alt)) {
+              const field = resolveLazyRuntype(alt.fields[fieldName]);
               if (
-                reflect(field, 'literal') &&
+                isLiteralRuntype(field) &&
                 hasKey(fieldName, value) &&
                 value[fieldName] === field.value
               ) {
-                return innerValidate(alternative, value, visited);
+                return innerValidate(alt, value, visited);
               }
             }
           }
@@ -83,13 +83,20 @@ export function Union<
         message: `Expected ${show(runtype)}, but was ${value === null ? value : typeof value}`,
       };
     },
-    { tag: 'union', alternatives, match: match as any },
+    {
+      tag: 'union',
+      alternatives,
+      match: match as any,
+      show({ parenthesize, showChild }) {
+        return parenthesize(`${alternatives.map(v => showChild(v, true)).join(' | ')}`);
+      },
+    },
   );
 
   return runtype;
 }
 
-export interface Match<A extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]> {
+export interface Match<A extends readonly RuntypeBase<unknown>[]> {
   <Z>(
     ...a: { [key in keyof A]: A[key] extends RuntypeBase<unknown> ? Case<A[key], Z> : never }
   ): Matcher<A, Z>;
@@ -97,7 +104,7 @@ export interface Match<A extends readonly [RuntypeBase<unknown>, ...RuntypeBase<
 
 export type Case<T extends RuntypeBase<unknown>, Result> = (v: Static<T>) => Result;
 
-export type Matcher<A extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]], Z> = (
+export type Matcher<A extends readonly RuntypeBase<unknown>[], Z> = (
   x: {
     [key in keyof A]: A[key] extends RuntypeBase<infer Type> ? Type : unknown;
   }[number],

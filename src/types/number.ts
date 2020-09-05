@@ -1,9 +1,8 @@
-import { RuntypeHelpers, RuntypeBase, create } from '../runtype';
+import { RuntypeHelpers, create } from '../runtype';
 
-export interface NumberBase extends RuntypeBase<number> {
+export interface Number extends RuntypeHelpers<number> {
   readonly tag: 'number';
 }
-export interface Number extends RuntypeHelpers<number>, NumberBase {}
 
 /**
  * Validates that a value is a number.

@@ -1,10 +1,8 @@
-import { RuntypeBase, create, RuntypeHelpers } from '../runtype';
+import { create, RuntypeHelpers } from '../runtype';
 
-export interface StringBase extends RuntypeBase<string> {
+export interface String extends RuntypeHelpers<string> {
   readonly tag: 'string';
 }
-
-export interface String extends RuntypeHelpers<string>, StringBase {}
 
 /**
  * Validates that a value is a string.

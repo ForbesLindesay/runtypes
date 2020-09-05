@@ -1,5 +1,4 @@
 export { Runtype, Static } from './runtype';
-export * from './reflect';
 export * from './result';
 export * from './contract';
 export * from './asynccontract';

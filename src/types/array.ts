@@ -1,26 +1,18 @@
 import { Static, create, innerValidate, RuntypeBase, RuntypeHelpers } from '../runtype';
 
-export interface ReadonlyArrayBase<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
-  extends RuntypeBase<readonly Static<E>[]> {
+export interface ReadonlyArray<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
+  extends RuntypeHelpers<readonly Static<E>[]> {
   readonly tag: 'array';
   readonly element: E;
   readonly isReadonly: true;
 }
-export interface ArrayBase<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
-  extends RuntypeBase<Static<E>[]> {
-  readonly tag: 'array';
-  readonly element: E;
-  readonly isReadonly: false;
-}
-
-export interface ReadonlyArray<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
-  extends RuntypeHelpers<readonly Static<E>[]>,
-    ReadonlyArrayBase<E> {}
 
 export { Arr as Array };
 interface Arr<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
-  extends RuntypeHelpers<Static<E>[]>,
-    ArrayBase<E> {
+  extends RuntypeHelpers<Static<E>[]> {
+  readonly tag: 'array';
+  readonly element: E;
+  readonly isReadonly: false;
   asReadonly(): ReadonlyArray<E>;
 }
 
@@ -31,7 +23,7 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
   element: TElement,
   isReadonly: IsReadonly,
 ): IsReadonly extends true ? ReadonlyArray<TElement> : Arr<TElement> {
-  const result = create<ReadonlyArrayBase<TElement> | ArrayBase<TElement>>(
+  const result = create<ReadonlyArray<TElement> | Arr<TElement>>(
     (xs, visited) => {
       if (!Array.isArray(xs)) {
         return {
@@ -53,7 +45,14 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
 
       return { success: true, value: xs };
     },
-    { tag: 'array', isReadonly, element },
+    {
+      tag: 'array',
+      isReadonly,
+      element,
+      show({ showChild }) {
+        return `${isReadonly ? 'readonly ' : ''}${showChild(element, true)}[]`;
+      },
+    },
   );
   if (!isReadonly) {
     (result as any).asReadonly = asReadonly;

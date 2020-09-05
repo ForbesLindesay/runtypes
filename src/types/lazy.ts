@@ -1,14 +1,10 @@
 import { create, RuntypeBase, RuntypeHelpers, innerValidate, Static } from '../runtype';
 
-export interface LazyBase<TUnderlying extends RuntypeBase<unknown> = RuntypeBase<unknown>>
-  extends RuntypeBase<Static<TUnderlying>> {
+export interface Lazy<TUnderlying extends RuntypeBase<unknown>>
+  extends RuntypeHelpers<Static<TUnderlying>> {
   readonly tag: 'lazy';
   readonly underlying: () => TUnderlying;
 }
-
-export interface Lazy<TUnderlying extends RuntypeBase<unknown>>
-  extends RuntypeHelpers<Static<TUnderlying>>,
-    LazyBase<TUnderlying> {}
 
 export function lazyValue<T>(fn: () => T) {
   let value: T;
@@ -18,6 +14,13 @@ export function lazyValue<T>(fn: () => T) {
     }
     return value;
   };
+}
+
+export function isLazyRuntype(runtype: RuntypeBase): runtype is Lazy<RuntypeBase> {
+  return 'tag' in runtype && (runtype as Lazy<RuntypeBase<unknown>>).tag === 'lazy';
+}
+export function resolveLazyRuntype(runtype: RuntypeBase): RuntypeBase {
+  return isLazyRuntype(runtype) ? runtype.underlying() : runtype;
 }
 
 /**
@@ -35,6 +38,9 @@ export function Lazy<TUnderlying extends RuntypeBase<unknown>>(
     {
       tag: 'lazy',
       underlying,
+      show({ showChild, needsParens }) {
+        return showChild(underlying(), needsParens);
+      },
     },
   );
 }

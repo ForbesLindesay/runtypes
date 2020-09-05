@@ -1,9 +1,8 @@
-import { RuntypeBase, create, RuntypeHelpers } from '../runtype';
+import { create, RuntypeHelpers } from '../runtype';
 
-export interface FunctionBase extends RuntypeBase<(...args: any[]) => any> {
+export interface Function extends RuntypeHelpers<(...args: any[]) => any> {
   readonly tag: 'function';
 }
-export interface Function extends RuntypeHelpers<(...args: any[]) => any>, FunctionBase {}
 
 /**
  * Construct a runtype for functions.

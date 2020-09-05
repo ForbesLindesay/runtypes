@@ -1,9 +1,8 @@
-import { RuntypeBase, RuntypeHelpers, create } from '../runtype';
+import { RuntypeHelpers, create } from '../runtype';
 
-export interface SymbolBase extends RuntypeBase<symbol> {
+interface Sym extends RuntypeHelpers<symbol> {
   readonly tag: 'symbol';
 }
-interface Sym extends RuntypeHelpers<symbol>, SymbolBase {}
 
 /**
  * Validates that a value is a symbol.

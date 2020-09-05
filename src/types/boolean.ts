@@ -1,9 +1,8 @@
-import { RuntypeBase, create, RuntypeHelpers } from '../runtype';
+import { create, RuntypeHelpers } from '../runtype';
 
-export interface BooleanBase extends RuntypeBase<boolean> {
+export interface Boolean extends RuntypeHelpers<boolean> {
   readonly tag: 'boolean';
 }
-export interface Boolean extends RuntypeHelpers<boolean>, BooleanBase {}
 
 /**
  * Validates that a value is a boolean.

@@ -10,15 +10,12 @@ export type StaticIntersect<TIntersectees extends readonly RuntypeBase<unknown>[
   ? I
   : never;
 
-export interface IntersectBase<
-  TIntersectees extends readonly RuntypeBase<unknown>[] = readonly RuntypeBase<unknown>[]
-> extends RuntypeBase<StaticIntersect<TIntersectees>> {
+export interface Intersect<
+  TIntersectees extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
+> extends RuntypeHelpers<StaticIntersect<TIntersectees>> {
   readonly tag: 'intersect';
   readonly intersectees: TIntersectees;
 }
-export interface Intersect<
-  TIntersectees extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
-> extends RuntypeHelpers<StaticIntersect<TIntersectees>>, IntersectBase<TIntersectees> {}
 
 /**
  * Construct an intersection runtype from runtypes for its alternatives.
@@ -36,6 +33,12 @@ export function Intersect<
       }
       return { success: true, value };
     },
-    { tag: 'intersect', intersectees },
+    {
+      tag: 'intersect',
+      intersectees,
+      show({ parenthesize, showChild }) {
+        return parenthesize(`${intersectees.map(v => showChild(v, true)).join(' & ')}`);
+      },
+    },
   );
 }
