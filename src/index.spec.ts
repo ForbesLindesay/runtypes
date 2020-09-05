@@ -294,9 +294,9 @@ for (const { value, passes } of testValues) {
 describe('contracts', () => {
   it('0 args', () => {
     const f = () => 3;
-    expect(Contract(Number).enforce(f)()).toBe(3);
+    expect(Contract([], Number).enforce(f)()).toBe(3);
     try {
-      Contract(String).enforce(f as any)();
+      Contract([], String).enforce(f as any)();
       fail('contract was violated but no exception was thrown');
     } catch (exception) {
       expect(exception).toBeInstanceOf(ValidationError);
@@ -306,9 +306,9 @@ describe('contracts', () => {
 
   it('1 arg', () => {
     const f = (x: string) => x.length;
-    expect(Contract(String, Number).enforce(f)('hel')).toBe(3);
+    expect(Contract([String], Number).enforce(f)('hel')).toBe(3);
     try {
-      (Contract(String, Number).enforce(f) as any)(3);
+      (Contract([String], Number).enforce(f) as any)(3);
       fail('contract was violated but no exception was thrown');
     } catch (exception) {
       expect(exception).toBeInstanceOf(ValidationError);
@@ -318,9 +318,9 @@ describe('contracts', () => {
 
   it('2 args', () => {
     const f = (x: string, y: boolean) => (y ? x.length : 4);
-    expect(Contract(String, Boolean, Number).enforce(f)('hello', false)).toBe(4);
+    expect(Contract([String, Boolean], Number).enforce(f)('hello', false)).toBe(4);
     try {
-      (Contract(String, Boolean, Number).enforce(f) as any)('hello');
+      (Contract([String, Boolean], Number).enforce(f) as any)('hello');
       fail('contract was violated but no exception was thrown');
     } catch (exception) {
       expect(exception).toBeInstanceOf(ValidationError);
