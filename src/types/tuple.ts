@@ -13,6 +13,10 @@ export interface Tuple<
   readonly components: TElements;
 }
 
+export function isTupleRuntype(runtype: RuntypeBase): runtype is Tuple<readonly RuntypeBase[]> {
+  return 'tag' in runtype && (runtype as Tuple<readonly RuntypeBase[]>).tag === 'tuple';
+}
+
 /**
  * Construct a tuple runtype from runtypes for each of its elements.
  */

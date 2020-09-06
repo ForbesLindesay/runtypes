@@ -182,8 +182,8 @@ export function innerValidate<A extends RuntypeBase>(
   return (targetType as any)._innerValidate(value, visited);
 }
 
-type VisitedState = {
-  has: (candidate: object, type: Runtype) => boolean;
+export type VisitedState = {
+  readonly has: (candidate: object, type: Runtype) => boolean;
 };
 function VisitedState(): VisitedState {
   const members: WeakMap<object, WeakMap<Runtype, true>> = new WeakMap();

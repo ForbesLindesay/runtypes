@@ -1,9 +1,10 @@
-import { Runtype, Static, create, innerValidate, RuntypeBase } from '../runtype';
+import { Runtype, Static, create, innerValidate, RuntypeBase, VisitedState } from '../runtype';
 import show from '../show';
-import { hasKey } from '../util';
 import { LiteralValue, isLiteralRuntype } from './literal';
-import { resolveLazyRuntype } from './lazy';
+import { lazyValue, resolveLazyRuntype } from './lazy';
 import { isRecordRuntype } from './record';
+import { Result } from '../result';
+import { isTupleRuntype } from './tuple';
 
 export type StaticUnion<TAlternatives extends readonly RuntypeBase<unknown>[]> = {
   [key in keyof TAlternatives]: TAlternatives[key] extends RuntypeBase<unknown>
@@ -24,64 +25,106 @@ export interface Union<TAlternatives extends readonly RuntypeBase<unknown>[]>
 export function Union<
   TAlternatives extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
 >(...alternatives: TAlternatives): Union<TAlternatives> {
-  const match = (...cases: any[]) => (x: any) => {
-    for (let i = 0; i < alternatives.length; i++) {
-      const input = alternatives[i].validate(x);
-      if (input.success) {
-        return cases[i](input.value);
+  type TResult = StaticUnion<TAlternatives>;
+  type InnerValidate = (x: any, visited: VisitedState) => Result<TResult>;
+  function validateWithKey(
+    tag: string | 0,
+    types: Map<LiteralValue, RuntypeBase<TResult>>,
+  ): InnerValidate {
+    return (value, visited) => {
+      if (!value || typeof value !== 'object') {
+        return {
+          success: false,
+          message: `Expected ${show(runtype)}, but was ${value === null ? value : typeof value}`,
+        };
       }
-    }
-  };
+      const validator = types.get(value[tag]);
+      if (validator) {
+        return innerValidate(validator, value, visited);
+      } else {
+        return {
+          success: false,
+          message: `Expected ${Array.from(types.keys())
+            .map(v => (typeof v === 'string' ? `'${v}'` : v))
+            .join(' | ')}, but was ${
+            value[tag] === null || typeof value === 'number' || typeof value[tag] === 'boolean'
+              ? value[tag]
+              : typeof value[tag] === 'string'
+              ? `'${value[tag]}'`
+              : typeof value[tag]
+          }`,
+          key: tag === 0 ? `[0]` : tag,
+        };
+      }
+    };
+  }
+  const innerValidator = lazyValue(
+    // This must be lazy to avoid eagerly evaluating any circular references
+    (): InnerValidate => {
+      const alts = alternatives.map(resolveLazyRuntype);
+      const recordAlternatives = alts.filter(isRecordRuntype);
+      if (recordAlternatives.length === alternatives.length) {
+        const commonLiteralFields: {
+          [key: string]: Map<LiteralValue, RuntypeBase<TResult>>;
+        } = {};
+        for (const alternative of recordAlternatives) {
+          for (const fieldName in alternative.fields) {
+            const field = resolveLazyRuntype(alternative.fields[fieldName]);
+            if (isLiteralRuntype(field)) {
+              if (!commonLiteralFields[fieldName]) {
+                commonLiteralFields[fieldName] = new Map();
+              }
+              if (!commonLiteralFields[fieldName].has(field.value)) {
+                commonLiteralFields[fieldName].set(
+                  field.value,
+                  alternative as RuntypeBase<StaticUnion<TAlternatives>>,
+                );
+              }
+            }
+          }
+        }
+        for (const tag of ['type', 'kind', 'tag', ...Object.keys(commonLiteralFields)]) {
+          if (tag in commonLiteralFields && commonLiteralFields[tag].size === alternatives.length) {
+            return validateWithKey(tag, commonLiteralFields[tag]);
+          }
+        }
+      }
+      const tupleAlternatives = alts.filter(isTupleRuntype);
+      if (tupleAlternatives.length === alternatives.length) {
+        const commonLiteralFields = new Map<LiteralValue, RuntypeBase<TResult>>();
+        for (const alternative of tupleAlternatives) {
+          const field = resolveLazyRuntype(alternative.components[0]);
+          if (isLiteralRuntype(field)) {
+            if (!commonLiteralFields.has(field.value)) {
+              commonLiteralFields.set(
+                field.value,
+                alternative as RuntypeBase<StaticUnion<TAlternatives>>,
+              );
+            }
+          }
+        }
+        if (commonLiteralFields.size === alternatives.length) {
+          return validateWithKey(0, commonLiteralFields);
+        }
+      }
+      return (value, visited) => {
+        for (const targetType of alternatives) {
+          if (innerValidate(targetType, value, visited).success) {
+            return { success: true, value };
+          }
+        }
+
+        return {
+          success: false,
+          message: `Expected ${show(runtype)}, but was ${value === null ? value : typeof value}`,
+        };
+      };
+    },
+  );
 
   const runtype: Union<TAlternatives> = create<Union<TAlternatives>>(
     (value, visited) => {
-      const commonLiteralFields: { [key: string]: LiteralValue[] } = {};
-      for (const alternative of alternatives) {
-        const alt = resolveLazyRuntype(alternative);
-        if (isRecordRuntype(alt)) {
-          for (const fieldName in alt.fields) {
-            const field = resolveLazyRuntype(alt.fields[fieldName]);
-            if (isLiteralRuntype(field)) {
-              if (commonLiteralFields[fieldName]) {
-                if (commonLiteralFields[fieldName].every(value => value !== field.value)) {
-                  commonLiteralFields[fieldName].push(field.value);
-                }
-              } else {
-                commonLiteralFields[fieldName] = [field.value];
-              }
-            }
-          }
-        }
-      }
-
-      for (const fieldName in commonLiteralFields) {
-        if (commonLiteralFields[fieldName].length === alternatives.length) {
-          for (const alternative of alternatives) {
-            const alt = resolveLazyRuntype(alternative);
-            if (isRecordRuntype(alt)) {
-              const field = resolveLazyRuntype(alt.fields[fieldName]);
-              if (
-                isLiteralRuntype(field) &&
-                hasKey(fieldName, value) &&
-                value[fieldName] === field.value
-              ) {
-                return innerValidate(alt, value, visited);
-              }
-            }
-          }
-        }
-      }
-
-      for (const targetType of alternatives) {
-        if (innerValidate(targetType, value, visited).success) {
-          return { success: true, value };
-        }
-      }
-
-      return {
-        success: false,
-        message: `Expected ${show(runtype)}, but was ${value === null ? value : typeof value}`,
-      };
+      return innerValidator()(value, visited);
     },
     {
       tag: 'union',
@@ -94,6 +137,19 @@ export function Union<
   );
 
   return runtype;
+
+  function match(...cases: any[]) {
+    return (x: any) => {
+      for (let i = 0; i < alternatives.length; i++) {
+        const input = alternatives[i].validate(x);
+        if (input.success) {
+          return cases[i](input.value);
+        }
+      }
+      // if none of the types matched, we should fail with an assertion error
+      runtype.assert(x);
+    };
+  }
 }
 
 export interface Match<A extends readonly RuntypeBase<unknown>[]> {
