@@ -92,8 +92,6 @@ export interface Runtype<A = unknown> extends RuntypeBase<A> {
    * Adds a brand to the type.
    */
   withBrand<B extends string>(brand: B): Brand<B, this>;
-
-  // case<Result>(fn: (value: A) => Result): PairCase<A, Result>;
 }
 
 /**
@@ -118,7 +116,9 @@ export function create<TConfig extends RuntypeBase<any>>(
 ): TConfig {
   const A: any = config;
   A.check = check;
-  A.assert = check;
+  A.assert = (v: any) => {
+    check(v);
+  };
   A._innerValidate = (value: any, visited: VisitedState) => {
     if (visited.has(value, A)) return { success: true, value };
     return validate(value, visited);
