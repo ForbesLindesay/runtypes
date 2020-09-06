@@ -61,6 +61,12 @@ export function InternalRecord<O extends RecordFields, Part extends boolean, RO 
       if (x === null || x === undefined) {
         return { success: false, message: `Expected ${show(runtype)}, but was ${x}` };
       }
+      if (typeof x !== 'object') {
+        return { success: false, message: `Expected ${show(runtype)}, but was ${typeof x}` };
+      }
+      if (Array.isArray(x)) {
+        return { success: false, message: `Expected ${show(runtype)}, but was an Array` };
+      }
 
       for (const key in fields) {
         if (!isPartial || (hasKey(key, x) && x[key] !== undefined)) {

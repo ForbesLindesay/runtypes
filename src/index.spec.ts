@@ -194,28 +194,28 @@ const testValues: { value: unknown; passes: RuntypeName[] }[] = [
   { value: [Symbol('0'), Symbol(42), Symbol()], passes: ['symbolArray'] },
   { value: Symbol.for('runtypes'), passes: ['Sym'] },
   { value: [true, false, true], passes: ['boolArray', 'boolTuple', 'union1'] },
-  { value: { Boolean: true, Number: 3 }, passes: ['record1', 'union1', 'Partial'] },
-  { value: { Boolean: true }, passes: ['Partial'] },
-  { value: { Boolean: true, foo: undefined }, passes: ['Partial'] },
-  { value: { Boolean: true, foo: 'hello' }, passes: ['Partial', 'OptionalKey'] },
-  { value: { Boolean: true, foo: 5 }, passes: ['ReadonlyPartial'] },
+  { value: { Boolean: true, Number: 3 }, passes: ['record1', 'union1', 'Partial', 'Empty'] },
+  { value: { Boolean: true }, passes: ['Partial', 'Empty'] },
+  { value: { Boolean: true, foo: undefined }, passes: ['Partial', 'Empty'] },
+  { value: { Boolean: true, foo: 'hello' }, passes: ['Partial', 'OptionalKey', 'Empty'] },
+  { value: { Boolean: true, foo: 5 }, passes: ['ReadonlyPartial', 'Empty'] },
   { value: (x: number, y: string) => x + y.length, passes: ['Function'] },
-  { value: { name: undefined, likes: [] }, passes: [] },
-  { value: { name: 'Jimmy', likes: [{ name: undefined, likes: [] }] }, passes: [] },
+  { value: { name: undefined, likes: [] }, passes: ['Empty'] },
+  { value: { name: 'Jimmy', likes: [{ name: undefined, likes: [] }] }, passes: ['Empty'] },
   {
     value: { name: 'Jimmy', likes: [{ name: 'Peter', likes: [] }] },
-    passes: ['Person'],
+    passes: ['Person', 'Empty'],
   },
-  { value: { a: '1', b: '2' }, passes: ['Dictionary'] },
+  { value: { a: '1', b: '2' }, passes: ['Dictionary', 'Empty'] },
   { value: ['1', '2'], passes: ['ArrayString'] },
   { value: ['1', 2], passes: [] },
   { value: [{ name: 'Jimmy', likes: [{ name: 'Peter', likes: [] }] }], passes: ['ArrayPerson'] },
   { value: [{ name: null, likes: [] }], passes: [] },
-  { value: { 1: '1', 2: '2' }, passes: ['Dictionary', 'NumberDictionary'] },
-  { value: { a: [], b: [true, false] }, passes: ['DictionaryOfArrays'] },
-  { value: new Foo(), passes: [] },
+  { value: { 1: '1', 2: '2' }, passes: ['Dictionary', 'NumberDictionary', 'Empty'] },
+  { value: { a: [], b: [true, false] }, passes: ['DictionaryOfArrays', 'Empty'] },
+  { value: new Foo(), passes: ['Empty'] },
   { value: [1, 2, 4], passes: ['ArrayNumber', 'ReadonlyNumberArray'] },
-  { value: { Boolean: true, Number: '5' }, passes: ['Partial'] },
+  { value: { Boolean: true, Number: '5' }, passes: ['Partial', 'Empty'] },
   {
     value: [1, 2, 3, 4],
     passes: ['ArrayNumber', 'ReadonlyNumberArray', 'CustomArray', 'CustomArrayWithMessage'],
@@ -228,6 +228,7 @@ const testValues: { value: unknown; passes: RuntypeName[] }[] = [
       'ChangeType',
       'ChangeTypeAndName',
       'GuardChangeTypeAndName',
+      'Empty',
     ],
   },
   {
@@ -238,20 +239,21 @@ const testValues: { value: unknown; passes: RuntypeName[] }[] = [
       'ChangeType',
       'ChangeTypeAndName',
       'GuardChangeTypeAndName',
+      'Empty',
     ],
   },
-  { value: { xxx: [new SomeClass(55)] }, passes: ['DictionaryOfArraysOfSomeClass'] },
-  { value: { foo: 'hello' }, passes: ['OptionalKey', 'Dictionary'] },
-  { value: { foo: 'hello', bar: undefined }, passes: ['OptionalKey'] },
-  { value: { foo: 4, bar: 'baz' }, passes: ['ReadonlyRecord', 'ReadonlyPartial'] },
-  { value: narcissist, passes: ['Person'] },
+  { value: { xxx: [new SomeClass(55)] }, passes: ['DictionaryOfArraysOfSomeClass', 'Empty'] },
+  { value: { foo: 'hello' }, passes: ['OptionalKey', 'Dictionary', 'Empty'] },
+  { value: { foo: 'hello', bar: undefined }, passes: ['OptionalKey', 'Empty'] },
+  { value: { foo: 4, bar: 'baz' }, passes: ['ReadonlyRecord', 'ReadonlyPartial', 'Empty'] },
+  { value: narcissist, passes: ['Person', 'Empty'] },
   { value: [narcissist, narcissist], passes: ['ArrayPerson'] },
   { value: barbell, passes: ['Graph'] },
   { value: nodeA, passes: ['Graph', 'BarbellBall'] },
-  { value: srDict, passes: ['SRDict'] },
-  { value: leftHand, passes: ['Hand', 'SRDict'] },
-  { value: ambi, passes: ['Ambi', 'Hand', 'SRDict'] },
-  { value: partialNarcissus, passes: ['PartialPerson'] },
+  { value: srDict, passes: ['SRDict', 'Empty'] },
+  { value: leftHand, passes: ['Hand', 'SRDict', 'Empty'] },
+  { value: ambi, passes: ['Ambi', 'Hand', 'SRDict', 'Empty'] },
+  { value: partialNarcissus, passes: ['PartialPerson', 'Empty'] },
 ];
 
 const getCircularReplacer = () => {
@@ -270,21 +272,18 @@ const getCircularReplacer = () => {
 for (const { value, passes } of testValues) {
   const valueName =
     value === undefined ? 'undefined' : JSON.stringify(value, getCircularReplacer());
-  describe(`${valueName}`, () => {
-    const shouldPass: { [_ in RuntypeName]?: boolean } = {};
+  const shouldPass: { [_ in RuntypeName]?: boolean } = {};
 
-    shouldPass.Unknown = true;
-    shouldPass.Void = true;
+  shouldPass.Unknown = true;
+  shouldPass.Void = true;
 
-    if (value !== undefined && value !== null) shouldPass.Empty = true;
-
-    for (const name of passes) shouldPass[name] = true;
-
+  for (const name of passes) shouldPass[name] = true;
+  describe(`${valueName} - ${Object.keys(shouldPass).join(', ')}`, () => {
     for (const name of runtypeNames) {
       if (shouldPass[name]) {
-        it(` : ${name}`, () => assertAccepts(value, runtypes[name]));
+        it(`should be valid for ${name}`, () => assertAccepts(value, runtypes[name]));
       } else {
-        it(`~: ${name}`, () => assertRejects(value, runtypes[name]));
+        it(`should NOT be valid for ${name}`, () => assertRejects(value, runtypes[name]));
       }
     }
   });
