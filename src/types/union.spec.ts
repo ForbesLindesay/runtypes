@@ -24,7 +24,7 @@ describe('union', () => {
 
       expect(Shape.validate({ kind: 'square', size: new Date() })).toMatchInlineSnapshot(`
         Object {
-          "key": "size",
+          "key": "<kind: 'square'>.size",
           "message": "Expected number, but was object",
           "success": false,
         }
@@ -32,7 +32,7 @@ describe('union', () => {
 
       expect(Shape.validate({ kind: 'rectangle', size: new Date() })).toMatchInlineSnapshot(`
         Object {
-          "key": "width",
+          "key": "<kind: 'rectangle'>.width",
           "message": "Expected number, but was undefined",
           "success": false,
         }
@@ -40,7 +40,7 @@ describe('union', () => {
 
       expect(Shape.validate({ kind: 'circle', size: new Date() })).toMatchInlineSnapshot(`
         Object {
-          "key": "radius",
+          "key": "<kind: 'circle'>.radius",
           "message": "Expected number, but was undefined",
           "success": false,
         }
@@ -50,6 +50,13 @@ describe('union', () => {
         Object {
           "key": "kind",
           "message": "Expected 'square' | 'rectangle' | 'circle', but was 'other'",
+          "success": false,
+        }
+      `);
+
+      expect(Shape.validate(42)).toMatchInlineSnapshot(`
+        Object {
+          "message": "Expected { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }, but was number",
           "success": false,
         }
       `);
@@ -83,7 +90,7 @@ describe('union', () => {
 
       expect(Shape.validate(['square', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
-          "key": "[1].size",
+          "key": "<[0]: 'square'>.[1].size",
           "message": "Expected number, but was object",
           "success": false,
         }
@@ -91,7 +98,7 @@ describe('union', () => {
 
       expect(Shape.validate(['rectangle', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
-          "key": "[1].width",
+          "key": "<[0]: 'rectangle'>.[1].width",
           "message": "Expected number, but was undefined",
           "success": false,
         }
@@ -99,7 +106,7 @@ describe('union', () => {
 
       expect(Shape.validate(['circle', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
-          "key": "[1].radius",
+          "key": "<[0]: 'circle'>.[1].radius",
           "message": "Expected number, but was undefined",
           "success": false,
         }
@@ -112,6 +119,77 @@ describe('union', () => {
           "success": false,
         }
       `);
+    });
+
+    it('should handle numeric tags', () => {
+      const Version1 = Tuple(Literal(1), Record({ size: Number }));
+      const Version2 = Tuple(Literal(2), Record({ width: Number, height: Number }));
+
+      const Shape = Union(Version1, Version2);
+
+      expect(Shape.validate([1, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "success": true,
+          "value": Array [
+            1,
+            Object {
+              "size": 10,
+            },
+          ],
+        }
+      `);
+
+      expect(Shape.validate([2, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "key": "<[0]: 2>.[1].width",
+          "message": "Expected number, but was undefined",
+          "success": false,
+        }
+      `);
+
+      expect(Shape.validate([2, { width: 10, height: 20 }])).toMatchInlineSnapshot(`
+        Object {
+          "success": true,
+          "value": Array [
+            2,
+            Object {
+              "height": 20,
+              "width": 10,
+            },
+          ],
+        }
+      `);
+
+      expect(Shape.validate([3, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "key": "[0]",
+          "message": "Expected 1 | 2, but was 3",
+          "success": false,
+        }
+      `);
+
+      const extract = Shape.match(
+        ([_, { size }]) => ({ width: size, height: size }),
+        ([_, dimensions]) => dimensions,
+      );
+
+      expect(extract([1, { size: 20 }])).toMatchInlineSnapshot(`
+        Object {
+          "height": 20,
+          "width": 20,
+        }
+      `);
+
+      expect(extract([2, { width: 20, height: 20 }])).toMatchInlineSnapshot(`
+        Object {
+          "height": 20,
+          "width": 20,
+        }
+      `);
+
+      expect(() => extract([2, { size: 20 } as any])).toThrowErrorMatchingInlineSnapshot(
+        `"Expected number, but was undefined in <[0]: 2>.[1].width"`,
+      );
     });
   });
 });

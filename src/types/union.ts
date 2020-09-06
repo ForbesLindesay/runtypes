@@ -19,6 +19,13 @@ export interface Union<TAlternatives extends readonly RuntypeBase<unknown>[]>
   match: Match<TAlternatives>;
 }
 
+function valueToString(value: any) {
+  return value === null || typeof value === 'number' || typeof value === 'boolean'
+    ? value
+    : typeof value === 'string'
+    ? `'${value}'`
+    : typeof value;
+}
 /**
  * Construct a union runtype from runtypes for its alternatives.
  */
@@ -40,19 +47,23 @@ export function Union<
       }
       const validator = types.get(value[tag]);
       if (validator) {
-        return innerValidate(validator, value, visited);
+        const result = innerValidate(validator, value, visited);
+        if (!result.success) {
+          return {
+            success: false,
+            message: result.message,
+            key: `<${tag === 0 ? `[0]` : tag}: ${valueToString(value[tag])}>${
+              result.key ? `.${result.key}` : ``
+            }`,
+          };
+        }
+        return result;
       } else {
         return {
           success: false,
           message: `Expected ${Array.from(types.keys())
             .map(v => (typeof v === 'string' ? `'${v}'` : v))
-            .join(' | ')}, but was ${
-            value[tag] === null || typeof value === 'number' || typeof value[tag] === 'boolean'
-              ? value[tag]
-              : typeof value[tag] === 'string'
-              ? `'${value[tag]}'`
-              : typeof value[tag]
-          }`,
+            .join(' | ')}, but was ${valueToString(value[tag])}`,
           key: tag === 0 ? `[0]` : tag,
         };
       }
