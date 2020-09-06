@@ -35,8 +35,7 @@ function getExpectedBaseType(key: KeyRuntypeBase): 'string' | 'number' | 'mixed'
 }
 
 export interface Dictionary<K extends KeyRuntypeBase, V extends RuntypeBase<unknown>>
-  extends Runtype<{ [_ in Static<K>]: Static<V> }>,
-    RuntypeBase<{ [_ in Static<K>]: Static<V> }> {
+  extends Runtype<{ [_ in Static<K>]?: Static<V> }> {
   readonly tag: 'dictionary';
   readonly key: K;
   readonly value: V;

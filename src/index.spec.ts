@@ -52,7 +52,7 @@ const barbell: Graph = [nodeA, nodeB];
 type BarbellBall = [BarbellBall];
 const BarbellBall: Runtype<BarbellBall> = Lazy(() => Tuple(BarbellBall));
 
-type SRDict = { [_: string]: SRDict };
+type SRDict = { [_ in string]?: SRDict };
 const SRDict: Runtype<SRDict> = Lazy(() => Dictionary(String, SRDict));
 const srDict: SRDict = {};
 srDict['self'] = srDict;
