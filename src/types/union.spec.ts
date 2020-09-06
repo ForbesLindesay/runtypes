@@ -121,6 +121,26 @@ describe('union', () => {
       `);
     });
 
+    it('hould not pick alternative if the tuple discriminant is not unique', () => {
+      const Square = Tuple(Literal('rectangle'), Record({ size: Number }));
+      const Rectangle = Tuple(Literal('rectangle'), Record({ width: Number, height: Number }));
+      const Circle = Tuple(Literal('circle'), Record({ radius: Number }));
+
+      const Shape = Union(Square, Rectangle, Circle);
+
+      expect(Shape.validate(['rectangle', { size: new Date() }])).not.toHaveProperty('key');
+    });
+
+    it('hould not pick alternative if the tuple has no discriminant', () => {
+      const Square = Tuple(String, Record({ size: Number }));
+      const Rectangle = Tuple(String, Record({ width: Number, height: Number }));
+      const Circle = Tuple(String, Record({ radius: Number }));
+
+      const Shape = Union(Square, Rectangle, Circle);
+
+      expect(Shape.validate(['rectangle', { size: new Date() }])).not.toHaveProperty('key');
+    });
+
     it('should handle numeric tags', () => {
       const Version1 = Tuple(Literal(1), Record({ size: Number }));
       const Version2 = Tuple(Literal(2), Record({ width: Number, height: Number }));
