@@ -27,8 +27,7 @@ function getExpectedBaseType(key: KeyRuntypeBase): 'string' | 'number' | 'mixed'
       return typeof key.value as 'string' | 'number';
     case 'union':
       const baseTypes = key.alternatives.map(getExpectedBaseType);
-      if (baseTypes.length === 1) return baseTypes[0];
-      return baseTypes.reduce((a, b) => (a === b ? a : 'mixed'));
+      return baseTypes.reduce((a, b) => (a === b ? a : 'mixed'), baseTypes[0]);
     case 'constraint':
       return getExpectedBaseType(key.underlying);
   }
