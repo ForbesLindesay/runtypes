@@ -4,23 +4,18 @@ import { String } from './string';
 import { Number } from './number';
 import { Literal } from './literal';
 import { Constraint } from './constraint';
-import { Lazy, lazyValue } from './lazy';
+import { lazyValue } from './lazy';
 import { Union } from './union';
 
-export type KeyRuntypeBaseWithoutLazyOrUnion =
+export type KeyRuntypeBaseWithoutUnion =
   | Pick<String, keyof RuntypeBase>
   | Pick<Number, keyof RuntypeBase>
   | Pick<Literal<string | number>, 'value' | keyof RuntypeBase>
   | Pick<Constraint<KeyRuntypeBase, string | number>, 'underlying' | keyof RuntypeBase>;
 
-export type KeyRuntypeBaseWithoutLazy =
-  | KeyRuntypeBaseWithoutLazyOrUnion
+export type KeyRuntypeBase =
+  | KeyRuntypeBaseWithoutUnion
   | Pick<Union<KeyRuntypeBaseWithoutUnion[]>, 'alternatives' | keyof RuntypeBase>;
-
-export type KeyRuntypeBaseWithoutUnion =
-  | KeyRuntypeBaseWithoutLazyOrUnion
-  | Pick<Lazy<KeyRuntypeBaseWithoutLazyOrUnion>, 'underlying' | keyof RuntypeBase>;
-export type KeyRuntypeBase = KeyRuntypeBaseWithoutLazy | KeyRuntypeBaseWithoutUnion;
 
 function getExpectedBaseType(key: KeyRuntypeBase): 'string' | 'number' | 'mixed' {
   switch (key.tag) {
@@ -36,8 +31,6 @@ function getExpectedBaseType(key: KeyRuntypeBase): 'string' | 'number' | 'mixed'
       return baseTypes.reduce((a, b) => (a === b ? a : 'mixed'));
     case 'constraint':
       return getExpectedBaseType(key.underlying);
-    case 'lazy':
-      return getExpectedBaseType(key.underlying());
   }
 }
 
@@ -78,21 +71,24 @@ export function Dictionary<K extends KeyRuntypeBase, V extends RuntypeBase<unkno
       }
 
       for (const k in x) {
+        let success = false;
         if (expectedBaseType() === 'number') {
           if (isNaN(+k))
             return {
               success: false,
-              message: 'Expected dictionary key to be a number, but was string',
+              message: `Expected dictionary key to be a number, but was '${k}'`,
             };
-          const keyResult = key.validate(+k);
-          if (!keyResult.success) return keyResult;
+          success = key.validate(+k).success;
         } else if (expectedBaseType() === 'string') {
-          const keyResult = key.validate(k);
-          if (!keyResult.success) return keyResult;
+          success = key.validate(k).success;
         } else {
-          const numResult = !isNaN(+k) && key.validate(+k);
-          const strResult = key.validate(k);
-          if (!(!numResult || numResult.success) && !strResult.success) return strResult;
+          success = key.validate(k).success || (!isNaN(+k) && key.validate(+k).success);
+        }
+        if (!success) {
+          return {
+            success: false,
+            message: `Expected dictionary key to be ${show(key)}, but was '${k}'`,
+          };
         }
 
         const validated = innerValidate(value, (x as any)[k], visited);
