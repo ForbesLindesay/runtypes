@@ -20,6 +20,9 @@ test('Runtype.assert', () => {
   expect(() => String.assert(42)).toThrowErrorMatchingInlineSnapshot(
     `"Expected string, but was number"`,
   );
+  expect(() => Record({ value: String }).assert({ value: 42 })).toThrowErrorMatchingInlineSnapshot(
+    `"Expected string, but was number in value"`,
+  );
 });
 
 test('Runtype.assert', () => {

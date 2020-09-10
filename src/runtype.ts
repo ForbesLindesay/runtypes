@@ -390,10 +390,11 @@ export function innerSerialize(
   );
   if (result.cycle) {
     const { placeholder, populate } = result;
-    visited.set(targetType, (visited.get(targetType) || new Map()).set(value, placeholder));
+    const cache = (visited.get(targetType) || new Map()).set(value, placeholder);
+    visited.set(targetType, cache);
     result = populate();
     if (result.success) {
-      visited.set(targetType, (visited.get(targetType) || new Map()).set(value, result.value));
+      cache.set(value, result.value);
     }
   }
   return result;

@@ -1,4 +1,4 @@
-import { Failure, Result } from '../result';
+import { Result } from '../result';
 import { RuntypeBase, Static, create, Codec, innerGuard } from '../runtype';
 import show from '../show';
 
@@ -19,7 +19,7 @@ export interface ParsedValueConfig<TUnderlying extends RuntypeBase<unknown>, TPa
   name?: string;
   parse: (value: Static<TUnderlying>) => Result<TParsed>;
   serialize?: (value: TParsed) => Result<Static<TUnderlying>>;
-  test?: RuntypeBase<TParsed> | ((x: any) => Failure | undefined);
+  test?: RuntypeBase<TParsed>;
 }
 export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
   underlying: TUnderlying,
@@ -40,19 +40,14 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
           return parsed;
         }
 
-        const testResult =
-          typeof config.test === 'function'
-            ? config.test(parsed.value)
-            : config.test
-            ? innerGuard(config.test, parsed.value, new Map())
-            : undefined;
+        const testResult = config.test
+          ? innerGuard(config.test, parsed.value, new Map())
+          : undefined;
 
         return testResult || parsed;
       },
       test(value, internalTest) {
-        if (typeof config.test === 'function') {
-          return config.test(value);
-        } else if (config.test) {
+        if (config.test) {
           return internalTest(config.test, value);
         } else {
           return {
@@ -70,12 +65,7 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
               `ParsedValue<${show(underlying)}>`} does not support Runtype.serialize`,
           };
         }
-        const testResult =
-          typeof config.test === 'function'
-            ? config.test(value)
-            : config.test
-            ? innerGuard(config.test, value, new Map())
-            : undefined;
+        const testResult = config.test ? innerGuard(config.test, value, new Map()) : undefined;
 
         if (testResult) {
           return testResult;

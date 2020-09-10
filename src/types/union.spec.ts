@@ -60,6 +60,21 @@ describe('union', () => {
           "success": false,
         }
       `);
+
+      expect(Shape.safeParse(null)).toMatchInlineSnapshot(`
+        Object {
+          "message": "Expected { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }, but was null",
+          "success": false,
+        }
+      `);
+
+      expect(Shape.safeParse({ kind: { v: 'circle' }, size: new Date() })).toMatchInlineSnapshot(`
+        Object {
+          "key": "kind",
+          "message": "Expected 'square' | 'rectangle' | 'circle', but was object",
+          "success": false,
+        }
+      `);
     });
 
     it('should not pick alternative if the discriminant is not unique', () => {
@@ -210,6 +225,116 @@ describe('union', () => {
       expect(() => extract([2, { size: 20 } as any])).toThrowErrorMatchingInlineSnapshot(
         `"Expected number, but was undefined in <[0]: 2>.[1].width"`,
       );
+    });
+    it('should handle branded tags', () => {
+      const Version1 = Tuple(Literal(1).withBrand('version'), Record({ size: Number }));
+      const Version2 = Tuple(
+        Literal(2).withBrand('version'),
+        Record({ width: Number, height: Number }),
+      );
+
+      const Shape = Union(Version1, Version2);
+
+      expect(Shape.safeParse([1, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "success": true,
+          "value": Array [
+            1,
+            Object {
+              "size": 10,
+            },
+          ],
+        }
+      `);
+
+      expect(Shape.safeParse([2, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "key": "<[0]: 2>.[1].width",
+          "message": "Expected number, but was undefined",
+          "success": false,
+        }
+      `);
+
+      expect(Shape.safeParse([2, { width: 10, height: 20 }])).toMatchInlineSnapshot(`
+        Object {
+          "success": true,
+          "value": Array [
+            2,
+            Object {
+              "height": 20,
+              "width": 10,
+            },
+          ],
+        }
+      `);
+
+      expect(Shape.safeParse([3, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "key": "[0]",
+          "message": "Expected 1 | 2, but was 3",
+          "success": false,
+        }
+      `);
+    });
+    it('should handle constraints', () => {
+      const Version1 = Tuple(Literal(1).withBrand('version'), Record({ size: Number }));
+      const Version2 = Tuple(
+        Literal(2).withBrand('version'),
+        Record({ width: Number, height: Number }),
+      ).withConstraint(([_, { width, height }]) =>
+        width > 0 && height > 0 ? true : 'Cannot have both width and height be 0',
+      );
+
+      const Shape = Union(Version1, Version2);
+
+      expect(Shape.safeParse([1, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "success": true,
+          "value": Array [
+            1,
+            Object {
+              "size": 10,
+            },
+          ],
+        }
+      `);
+
+      expect(Shape.safeParse([2, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "key": "<[0]: 2>.[1].width",
+          "message": "Expected number, but was undefined",
+          "success": false,
+        }
+      `);
+
+      expect(Shape.safeParse([2, { width: 10, height: 20 }])).toMatchInlineSnapshot(`
+        Object {
+          "success": true,
+          "value": Array [
+            2,
+            Object {
+              "height": 20,
+              "width": 10,
+            },
+          ],
+        }
+      `);
+
+      expect(Shape.safeParse([3, { size: 10 }])).toMatchInlineSnapshot(`
+        Object {
+          "key": "[0]",
+          "message": "Expected 1 | 2, but was 3",
+          "success": false,
+        }
+      `);
+
+      expect(Shape.safeParse([2, { width: 0, height: 0 }])).toMatchInlineSnapshot(`
+        Object {
+          "key": "<[0]: 2>",
+          "message": "Cannot have both width and height be 0",
+          "success": false,
+        }
+      `);
     });
   });
 });

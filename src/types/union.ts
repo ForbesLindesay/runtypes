@@ -134,13 +134,28 @@ export function Union<
         }
       }
       return (value, innerValidate) => {
+        let errorsWithKey = 0;
+        let lastError;
+        let lastErrorRuntype;
         for (const targetType of alternatives) {
           const result = innerValidate(targetType, value);
           if (result.success) {
             return result as Result<TResult>;
           }
+          if (result.key) {
+            errorsWithKey++;
+            lastError = result;
+            lastErrorRuntype = targetType;
+          }
         }
 
+        if (lastError && lastErrorRuntype && errorsWithKey === 1) {
+          return {
+            success: false,
+            message: lastError.message,
+            key: `<${show(lastErrorRuntype)}>.${lastError.key}`,
+          };
+        }
         return {
           success: false,
           message: `Expected ${show(runtype)}, but was ${value === null ? value : typeof value}`,

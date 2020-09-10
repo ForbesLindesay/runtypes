@@ -41,7 +41,7 @@ export function Intersect<
                 )} attempted to convert the type of this value from an array to something else. That conversion is not valid as the child of an intersect`,
               };
             }
-            placeholder.splice(0, placeholder.length, validated.value);
+            placeholder.splice(0, placeholder.length, ...validated.value);
           }
         });
       } else if (value && typeof value === 'object') {
@@ -71,7 +71,6 @@ export function Intersect<
         }
         result = validated.value;
       }
-      // TODO: merge the maps
       return { success: true, value: result };
     },
     {
