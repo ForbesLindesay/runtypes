@@ -1,5 +1,6 @@
 import * as ta from 'type-assertions';
 import { String, Number, ParsedValue, Static, Literal, Record, Union } from '..';
+import { InstanceOf } from './instanceof';
 
 test('TrimmedString', () => {
   const TrimmedString = ParsedValue(String, {
@@ -17,6 +18,12 @@ test('TrimmedString', () => {
     Object {
       "success": true,
       "value": "foo bar",
+    }
+  `);
+  expect(TrimmedString.safeParse(42)).toMatchInlineSnapshot(`
+    Object {
+      "message": "Expected string, but was number",
+      "success": false,
     }
   `);
 
@@ -128,6 +135,39 @@ test('Upgrade Example', () => {
     Object {
       "key": "<version: 1>",
       "message": "ParsedValue<{ version: 1; size: number; }> does not support Runtype.serialize",
+      "success": false,
+    }
+  `);
+});
+
+test('URL', () => {
+  const URLString = ParsedValue(String, {
+    name: 'URLString',
+    parse(value) {
+      try {
+        return { success: true, value: new URL(value) };
+      } catch (ex) {
+        return { success: false, message: `Expected a valid URL but got '${value}'` };
+      }
+    },
+    test: InstanceOf(URL),
+  });
+
+  expect(URLString.safeParse('https://example.com')).toMatchInlineSnapshot(`
+    Object {
+      "success": true,
+      "value": "https://example.com/",
+    }
+  `);
+  expect(URLString.safeParse(42)).toMatchInlineSnapshot(`
+    Object {
+      "message": "Expected string, but was number",
+      "success": false,
+    }
+  `);
+  expect(URLString.safeParse('not a url')).toMatchInlineSnapshot(`
+    Object {
+      "message": "Expected a valid URL but got 'not a url'",
       "success": false,
     }
   `);
