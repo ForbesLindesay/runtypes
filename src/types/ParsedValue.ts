@@ -1,5 +1,12 @@
 import { Result } from '../result';
-import { RuntypeBase, Static, create, Codec, innerGuard } from '../runtype';
+import {
+  RuntypeBase,
+  Static,
+  create,
+  Codec,
+  innerGuard,
+  createGuardVisitedState,
+} from '../runtype';
 import show from '../show';
 
 export interface ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>
@@ -41,7 +48,7 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
         }
 
         const testResult = config.test
-          ? innerGuard(config.test, parsed.value, new Map())
+          ? innerGuard(config.test, parsed.value, createGuardVisitedState())
           : undefined;
 
         return testResult || parsed;
@@ -65,7 +72,9 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
               `ParsedValue<${show(underlying)}>`} does not support Runtype.serialize`,
           };
         }
-        const testResult = config.test ? innerGuard(config.test, value, new Map()) : undefined;
+        const testResult = config.test
+          ? innerGuard(config.test, value, createGuardVisitedState())
+          : undefined;
 
         if (testResult) {
           return testResult;

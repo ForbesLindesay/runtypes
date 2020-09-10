@@ -1,4 +1,13 @@
-import { Codec, Static, create, RuntypeBase, InnerValidateHelper, innerValidate } from '../runtype';
+import {
+  Codec,
+  Static,
+  create,
+  RuntypeBase,
+  InnerValidateHelper,
+  innerValidate,
+  createVisitedState,
+  OpaqueVisitedState,
+} from '../runtype';
 import show from '../show';
 import { LiteralValue, isLiteralRuntype } from './literal';
 import { lazyValue, isLazyRuntype } from './lazy';
@@ -182,7 +191,7 @@ export function Union<
 
   function match(...cases: any[]) {
     return (x: any) => {
-      const visited = new Map<RuntypeBase, Map<any, any>>();
+      const visited: OpaqueVisitedState = createVisitedState();
       for (let i = 0; i < alternatives.length; i++) {
         const input = innerValidate(alternatives[i], x, visited);
         if (input.success) {
