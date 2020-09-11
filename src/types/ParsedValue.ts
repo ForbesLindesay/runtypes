@@ -6,6 +6,7 @@ import {
   Codec,
   innerGuard,
   createGuardVisitedState,
+  mapValidationPlaceholder,
 } from '../runtype';
 import show from '../show';
 
@@ -34,24 +35,34 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
 ): ParsedValue<TUnderlying, TParsed> {
   return create<ParsedValue<TUnderlying, TParsed>>(
     {
-      validate: (value, innerValidate) => {
-        const validated = innerValidate(underlying, value);
+      validate: (value, _innerValidate, innerValidateToPlaceholder) => {
+        const validated = innerValidateToPlaceholder(underlying, value);
 
         if (!validated.success) {
           return validated;
         }
 
-        const parsed = config.parse(value);
+        if (!validated.cycle) {
+          const parsed = config.parse(validated.value as any);
 
-        if (!parsed.success) {
-          return parsed;
+          if (!parsed.success) {
+            return parsed;
+          }
+
+          const testResult = config.test
+            ? innerGuard(config.test, parsed.value, createGuardVisitedState())
+            : undefined;
+
+          return testResult || parsed;
+        } else {
+          return mapValidationPlaceholder<any, TParsed>(
+            validated,
+            source => {
+              return config.parse(source);
+            },
+            config.test,
+          );
         }
-
-        const testResult = config.test
-          ? innerGuard(config.test, parsed.value, createGuardVisitedState())
-          : undefined;
-
-        return testResult || parsed;
       },
       test(value, internalTest) {
         if (config.test) {
@@ -64,7 +75,7 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
           };
         }
       },
-      serialize(value, internalSerialize) {
+      serialize(value, _internalSerialize, _internalSerializeToPlaceholder) {
         if (!config.serialize) {
           return {
             success: false,
@@ -86,7 +97,7 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
           return serialized;
         }
 
-        return internalSerialize(underlying, serialized.value);
+        return _internalSerializeToPlaceholder(underlying, serialized.value);
       },
     },
     {

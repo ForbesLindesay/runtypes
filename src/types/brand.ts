@@ -19,11 +19,8 @@ export function isBrandRuntype(runtype: RuntypeBase): runtype is Brand<string, R
 
 export function Brand<B extends string, A extends RuntypeBase<unknown>>(brand: B, entity: A) {
   return create<Brand<B, A>>(
-    (value, innerValidate) => {
-      const validated = innerValidate(entity, value);
-      return validated.success
-        ? { success: true, value: validated.value as Static<Brand<B, A>> }
-        : validated;
+    (value, _innerValidate, innerValidateToPlaceholder) => {
+      return innerValidateToPlaceholder(entity, value) as any;
     },
     {
       tag: 'brand',

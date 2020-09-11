@@ -7,18 +7,13 @@ export type InnerValidateHelper = <T>(runtype: RuntypeBase<T>, value: unknown) =
 declare const internalSymbol: unique symbol;
 const internal: typeof internalSymbol = ('__internal__' as unknown) as typeof internalSymbol;
 
+export type ResultWithCycle<T> = (Result<T> & { cycle?: false }) | Cycle<T>;
 export interface InternalValidation<TParsed> {
   validate(
     x: any,
     innerValidate: <T>(runtype: RuntypeBase<T>, value: unknown) => Result<T>,
-  ):
-    | (Result<TParsed> & { cycle?: false })
-    | {
-        success: true;
-        cycle: true;
-        placeholder: Partial<TParsed>;
-        populate: () => Result<TParsed>;
-      };
+    innerValidateToPlaceholder: <T>(runtype: RuntypeBase<T>, value: unknown) => ResultWithCycle<T>,
+  ): ResultWithCycle<TParsed>;
   test?: (
     x: any,
     innerValidate: <T>(runtype: RuntypeBase<T>, value: unknown) => Failure | undefined,
@@ -26,14 +21,8 @@ export interface InternalValidation<TParsed> {
   serialize?: (
     x: any,
     innerSerialize: (runtype: RuntypeBase, value: unknown) => Result<any>,
-  ) =>
-    | (Result<any> & { cycle?: false })
-    | {
-        success: true;
-        cycle: true;
-        placeholder: Partial<any>;
-        populate: () => Result<any>;
-      };
+    innerSerializeToPlaceholder: (runtype: RuntypeBase, value: unknown) => ResultWithCycle<any>,
+  ) => ResultWithCycle<any>;
 }
 /**
  * A runtype determines at runtime whether a value conforms to a type specification.
@@ -278,32 +267,180 @@ export function create<TConfig extends Codec<any, any>>(
   }
 }
 
-export function createValidationPlaceholder<T>(
-  placeholder: T,
-  fn: (placehoder: T) => Failure | undefined,
-): {
+export type Cycle<T> = {
   success: true;
   cycle: true;
   placeholder: Partial<T>;
   populate: () => Result<T>;
-} {
+  unwrap: () => Result<T>;
+};
+
+function attemptMixin<T>(placehoder: any, value: T): Result<T> {
+  if (placehoder === value) {
+    return { success: true, value };
+  }
+  if (Array.isArray(placehoder) && Array.isArray(value)) {
+    placehoder.splice(0, placehoder.length, ...value);
+    return { success: true, value: placehoder as any };
+  }
+  if (
+    placehoder &&
+    typeof placehoder === 'object' &&
+    !Array.isArray(placehoder) &&
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value)
+  ) {
+    Object.assign(placehoder, value);
+    return { success: true, value: placehoder };
+  }
   return {
+    success: false,
+    message: `Cannot convert a value of type "${
+      Array.isArray(placehoder) ? 'Array' : typeof placehoder
+    }" into a value of type "${
+      value === null ? 'null' : Array.isArray(value) ? 'Array' : typeof value
+    }" when it contains cycles.`,
+  };
+}
+
+export function createValidationPlaceholder<T>(
+  placeholder: T,
+  fn: (placehoder: T) => Result<T> | undefined,
+): Cycle<T> {
+  let unwrapped = false;
+  let populating = false;
+  let cache: Result<T> | undefined;
+  const populateUncached = (): Result<T> => {
+    const result = fn(placeholder);
+    if (result) {
+      if (!result.success) {
+        return result;
+      }
+      if (unwrapped) {
+        return attemptMixin(placeholder, result.value);
+      } else {
+        cycle.placeholder = result.value;
+        return result;
+      }
+    }
+    return { success: true, value: placeholder };
+  };
+  const cycle: Cycle<T> = {
     success: true,
     cycle: true,
     placeholder,
     populate: () => {
-      const result = fn(placeholder);
-      if (result) {
-        return result;
+      if (cache) return cache;
+      if (populating) {
+        return {
+          success: false,
+          message: 'Cyclic data structure could not be handled by this set of parsers.',
+        };
       }
-      return { success: true, value: placeholder };
+      populating = true;
+      const result = populateUncached();
+      cache = result;
+      return result;
+    },
+    unwrap: () => {
+      if (cache) return cache;
+      if (populating) {
+        unwrapped = true;
+        return {
+          success: true,
+          value: cycle.placeholder as T,
+        };
+      }
+      populating = true;
+      const result = populateUncached();
+      cache = result;
+      return result;
     },
   };
+  return cycle;
+}
+
+export function mapValidationPlaceholder<T, S>(
+  source: ResultWithCycle<T>,
+  fn: (placehoder: T) => Result<S>,
+  extraGuard?: RuntypeBase<S>,
+): ResultWithCycle<S> {
+  if (!source.success) return source;
+  if (!source.cycle) return fn(source.value);
+  const sourceCycle = source;
+  const placeholder: Partial<S> = (Array.isArray(sourceCycle.placeholder)
+    ? [...sourceCycle.placeholder]
+    : { ...sourceCycle.placeholder }) as any;
+
+  let unwrapped = false;
+  let populating = false;
+  let cache: Result<S> | undefined;
+  const populateUncached = (): Result<S> => {
+    const sourceResult = sourceCycle.populate();
+    if (!sourceResult.success) return sourceResult;
+    const result = fn(sourceResult.value);
+    if (!result.success) {
+      return result;
+    }
+    if (unwrapped) {
+      const unwrapResult = attemptMixin(placeholder, result.value);
+      const guardFailure =
+        unwrapResult.success &&
+        extraGuard &&
+        innerGuard(extraGuard, unwrapResult.value, createGuardVisitedState());
+      return guardFailure || unwrapResult;
+    } else {
+      const guardFailure =
+        extraGuard && innerGuard(extraGuard, result.value, createGuardVisitedState());
+      cycle.placeholder = result.value;
+      return guardFailure || result;
+    }
+  };
+  const cycle: Cycle<S> = {
+    success: true,
+    cycle: true,
+    placeholder,
+    populate: () => {
+      if (cache) return cache;
+      if (populating) {
+        return {
+          success: false,
+          message: 'Cyclic data structure could not be handled by this set of parsers.',
+        };
+      }
+      populating = true;
+      const result = populateUncached();
+      cache = result;
+      if (result.success) {
+        cycle.placeholder = result.value;
+      }
+      return result;
+    },
+    unwrap: () => {
+      if (cache) return cache;
+      if (populating) {
+        unwrapped = true;
+        return {
+          success: true,
+          value: placeholder as S,
+        };
+      }
+      populating = true;
+      const result = populateUncached();
+      cache = result;
+      if (result.success) {
+        cycle.placeholder = result.value;
+      }
+      return result;
+    },
+  };
+  return cycle;
 }
 
 declare const OpaqueVisitedState: unique symbol;
 export type OpaqueVisitedState = typeof OpaqueVisitedState;
-type VisitedState = Map<RuntypeBase<unknown>, Map<any, any>>;
+type VisitedState = Map<RuntypeBase<unknown>, Map<any, Cycle<any>>>;
 
 function unwrapVisitedState(o: OpaqueVisitedState): VisitedState {
   return o as any;
@@ -336,20 +473,66 @@ export function innerValidate<T>(
   value: any,
   $visited: OpaqueVisitedState,
 ): Result<T> {
+  const result = innerValidateToPlaceholder(targetType, value, $visited);
+  if (result.cycle) {
+    return result.unwrap();
+  }
+  return result;
+}
+
+function innerValidateToPlaceholder<T>(
+  targetType: RuntypeBase<T>,
+  value: any,
+  $visited: OpaqueVisitedState,
+): ResultWithCycle<T> {
   const visited = unwrapVisitedState($visited);
   const validator = targetType[internal];
   const cached = visited.get(targetType)?.get(value);
   if (cached !== undefined) {
-    return { success: true, value: cached };
+    return cached;
   }
-  let result = validator.validate(value, (t, v) => innerValidate(t, v, $visited));
+  const result = validator.validate(
+    value,
+    (t, v) => innerValidate(t, v, $visited),
+    (t, v) => innerValidateToPlaceholder(t, v, $visited),
+  );
   if (result.cycle) {
-    const { placeholder, populate } = result;
-    visited.set(targetType, (visited.get(targetType) || new Map()).set(value, placeholder));
-    result = populate();
-    if (result.success) {
-      visited.set(targetType, (visited.get(targetType) || new Map()).set(value, result.value));
-    }
+    visited.set(targetType, (visited.get(targetType) || new Map()).set(value, result));
+    return result;
+  }
+  return result;
+}
+
+export function innerSerialize<T>(
+  targetType: RuntypeBase<T>,
+  value: any,
+  $visited: OpaqueVisitedState,
+): Result<T> {
+  const result = innerSerializeToPlaceholder(targetType, value, $visited);
+  if (result.cycle) {
+    return result.unwrap();
+  }
+  return result;
+}
+function innerSerializeToPlaceholder(
+  targetType: RuntypeBase,
+  value: any,
+  $visited: OpaqueVisitedState,
+): ResultWithCycle<any> {
+  const visited = unwrapVisitedState($visited);
+  const validator = targetType[internal];
+  const cached = visited.get(targetType)?.get(value);
+  if (cached !== undefined) {
+    return cached;
+  }
+  let result = (validator.serialize || validator.validate)(
+    value,
+    (t, v) => innerSerialize(t, v, $visited),
+    (t, v) => innerSerializeToPlaceholder(t, v, $visited),
+  );
+  if (result.cycle) {
+    visited.set(targetType, (visited.get(targetType) || new Map()).set(value, result));
+    return result;
   }
   return result;
 }
@@ -372,34 +555,9 @@ export function innerGuard(
   let result = validator.validate(
     value,
     (t, v) => innerGuard(t, v, $visited) || { success: true, value: v as any },
+    (t, v) => innerGuard(t, v, $visited) || { success: true, value: v as any },
   );
   if (result.cycle) result = result.populate();
   if (result.success) return undefined;
   else return result;
-}
-
-export function innerSerialize(
-  targetType: RuntypeBase,
-  value: any,
-  $visited: OpaqueVisitedState,
-): Result<any> {
-  const visited = unwrapVisitedState($visited);
-  const validator = targetType[internal];
-  const cached = visited.get(targetType)?.get(value);
-  if (cached !== undefined) {
-    return { success: true, value: cached };
-  }
-  let result = (validator.serialize || validator.validate)(value, (t, v) =>
-    innerSerialize(t, v, $visited),
-  );
-  if (result.cycle) {
-    const { placeholder, populate } = result;
-    const cache = (visited.get(targetType) || new Map()).set(value, placeholder);
-    visited.set(targetType, cache);
-    result = populate();
-    if (result.success) {
-      cache.set(value, result.value);
-    }
-  }
-  return result;
 }

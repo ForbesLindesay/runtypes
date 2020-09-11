@@ -304,32 +304,26 @@ test('Handle Being Within Cycles', () => {
   expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(
     `"Expected the string to be trimmed, but this one has whitespace in [0]"`,
   );
-  // const RecursiveType = Tuple(Literal(1));
 });
 
 test('Handle Being Outside Cycles', () => {
   type RecursiveTypePreParse = (string | RecursiveTypePreParse)[];
   type RecursiveType = RecursiveType[];
-  const RecursiveTypeWithoutParse: Codec<RecursiveType> = Lazy(() => Array(RecursiveType));
+  const RecursiveTypeWithoutParse: Codec<RecursiveType> = Lazy(() =>
+    Array(RecursiveTypeWithoutParse),
+  );
   const RecursiveType: Codec<RecursiveType, RecursiveTypePreParse> = Lazy(() =>
     Array(Union(String, RecursiveType)).withParser({
       parse(arr) {
-        // To use parse on data containing cycles, you have to mutate the existing value
-        // normally this is not advised, as it's harder to do without introducing bugs.
-        // You also cannot safely do this if there are any parsed types in the underlying type.
-        // Essetially, please don't do this!
-        arr.splice(
-          0,
-          arr.length,
-          ...arr.filter(<T>(value: T): value is Exclude<T, string> => typeof value !== 'string'),
-        );
         return {
           success: true,
-          value: arr as RecursiveType,
+          value: arr.filter(
+            <T>(value: T): value is Exclude<T, string> => typeof value !== 'string',
+          ),
         };
       },
       serialize(arr: RecursiveType) {
-        return { success: true, value: arr };
+        return { success: true, value: ['hello world', ...arr] };
       },
       test: RecursiveTypeWithoutParse,
     }),
@@ -348,5 +342,80 @@ test('Handle Being Outside Cycles', () => {
   expect(serialized).toEqual(example);
 
   expect(() => RecursiveType.assert(parsed)).not.toThrow();
-  expect(() => RecursiveType.assert(serialized)).not.toThrow();
+  expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(
+    `"Expected array, but was string in [0]"`,
+  );
+});
+
+test('Fails when cycles modify types', () => {
+  type RecursiveTypePreParse = RecursiveTypePreParse[];
+  type RecursiveType = { values: RecursiveType[] };
+  const RecursiveTypeWithoutParse: Codec<RecursiveType> = Lazy(() =>
+    Record({ values: Array(RecursiveTypeWithoutParse) }),
+  );
+  const RecursiveType: Codec<RecursiveType, RecursiveTypePreParse> = Lazy(
+    () =>
+      Array(RecursiveType).withParser({
+        name: 'Parser<Array ↔ Object>',
+        parse(arr) {
+          return {
+            success: true,
+            value: { values: arr },
+          };
+        },
+        serialize(obj) {
+          return { success: true, value: obj.values };
+        },
+        test: RecursiveTypeWithoutParse,
+      }),
+    // TODO: the type for serialize doesn't quite line up here
+  ) as any;
+
+  const example: RecursiveTypePreParse = [];
+  example.push(example);
+
+  const expected: RecursiveType = { values: [] };
+  expected.values.push(expected);
+
+  // parse doesn't work because the recursive passing in `Array(RecursiveType)` "locks in" a type of "Array"
+  // and we later change it to object
+  expect(RecursiveType.safeParse(example)).toMatchInlineSnapshot(`
+    Object {
+      "message": "Cannot convert a value of type \\"Array\\" into a value of type \\"object\\" when it contains cycles.",
+      "success": false,
+    }
+  `);
+
+  // we can still use this recursive type to parse arbitrarily nested data
+  expect(RecursiveType.safeParse([[], [[]]])).toMatchInlineSnapshot(`
+    Object {
+      "success": true,
+      "value": Object {
+        "values": Array [
+          Object {
+            "values": Array [],
+          },
+          Object {
+            "values": Array [
+              Object {
+                "values": Array [],
+              },
+            ],
+          },
+        ],
+      },
+    }
+  `);
+
+  // the type conversion in serialize happens before the data type has locked in
+  // so we can handle cyclic data structures, although it's probably not a great
+  // idea
+  expect(RecursiveType.safeSerialize(expected)).toMatchInlineSnapshot(`
+    Object {
+      "success": true,
+      "value": Array [
+        [Circular],
+      ],
+    }
+  `);
 });
