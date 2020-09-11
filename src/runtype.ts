@@ -29,25 +29,14 @@ export interface InternalValidation<TParsed> {
 /**
  * A runtype determines at runtime whether a value conforms to a type specification.
  */
-export interface RuntypeBase<A = unknown> {
+export interface RuntypeBase<TParsed = unknown> {
   readonly tag: string;
 
-  show?: (ctx: {
-    needsParens: boolean;
-    parenthesize: (str: string) => string;
-    showChild: (rt: RuntypeBase, needsParens: boolean) => string;
-  }) => string;
-
-  [internal]: InternalValidation<A>;
-}
-
-/**
- * A runtype determines at runtime whether a value conforms to a type specification.
- */
-export interface Runtype<TParsed> extends RuntypeBase<TParsed> {
   /**
    * Verifies that a value conforms to this runtype. When given a value that does
    * not conform to the runtype, throws an exception.
+   *
+   * @throws ValidationError
    */
   assert(x: any): asserts x is TParsed;
 
@@ -62,8 +51,13 @@ export interface Runtype<TParsed> extends RuntypeBase<TParsed> {
   guard(x: any): x is TParsed;
 
   /**
-   * Verifies that a value conforms to this runtype. If so, returns the same value,
-   * statically typed. Otherwise throws an exception.
+   * Validates the value conforms to this type, and performs
+   * the `parse` action for any `ParsedValue` types.
+   *
+   * If the value is valid, it returns the parsed value,
+   * otherwise it throws a ValidationError.
+   *
+   * @throws ValidationError
    */
   parse(x: any): TParsed;
 
@@ -73,8 +67,11 @@ export interface Runtype<TParsed> extends RuntypeBase<TParsed> {
   check(x: any): TParsed;
 
   /**
-   * Validates that a value conforms to this type, and returns a result indicating
-   * success or failure (does not throw).
+   * Validates the value conforms to this type, and performs
+   * the `parse` action for any `ParsedValue` types.
+   *
+   * Returns a `Result`, constaining the parsed value or
+   * error message. Does not throw!
    */
   safeParse(x: any): Result<TParsed>;
 
@@ -83,6 +80,19 @@ export interface Runtype<TParsed> extends RuntypeBase<TParsed> {
    */
   validate(x: any): Result<TParsed>;
 
+  show?: (ctx: {
+    needsParens: boolean;
+    parenthesize: (str: string) => string;
+    showChild: (rt: RuntypeBase, needsParens: boolean) => string;
+  }) => string;
+
+  [internal]: InternalValidation<TParsed>;
+}
+
+/**
+ * A runtype determines at runtime whether a value conforms to a type specification.
+ */
+export interface Runtype<TParsed> extends RuntypeBase<TParsed> {
   /**
    * Union this Runtype with another.
    */
@@ -143,7 +153,24 @@ export interface Runtype<TParsed> extends RuntypeBase<TParsed> {
 }
 
 export interface Codec<TParsed> extends Runtype<TParsed> {
+  /**
+   * Validates the value conforms to this type, and performs
+   * the `serialize` action for any `ParsedValue` types.
+   *
+   * If the value is valid, and the type supports serialize,
+   * it returns the serialized value, otherwise it throws a
+   * ValidationError.
+   *
+   * @throws ValidationError
+   */
   serialize: (x: TParsed) => unknown;
+  /**
+   * Validates the value conforms to this type, and performs
+   * the `serialize` action for any `ParsedValue` types.
+   *
+   * Returns a `Result`, constaining the serialized value or
+   * error message. Does not throw!
+   */
   safeSerialize: (x: TParsed) => Result<unknown>;
 }
 /**
