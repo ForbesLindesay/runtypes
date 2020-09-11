@@ -9,7 +9,15 @@ test('pick', () => {
   const PetMember = CrewMember.pick('name', 'home');
 
   expect(Object.keys(PetMember.fields)).toEqual(['name', 'home']);
-  expect(PetMember.safeParse({ name: 'my name', home: 'my home' })).toMatchInlineSnapshot();
+  expect(PetMember.safeParse({ name: 'my name', home: 'my home' })).toMatchInlineSnapshot(`
+    Object {
+      "success": true,
+      "value": Object {
+        "home": "my home",
+        "name": "my name",
+      },
+    }
+  `);
 });
 
 test('omit', () => {
@@ -21,5 +29,13 @@ test('omit', () => {
   const PetMember = CrewMember.omit('rank');
 
   expect(Object.keys(PetMember.fields)).toEqual(['name', 'home']);
-  expect(PetMember.safeParse({ name: 'my name', home: 'my home' })).toMatchInlineSnapshot();
+  expect(PetMember.safeParse({ name: 'my name', home: 'my home' })).toMatchInlineSnapshot(`
+    Object {
+      "success": true,
+      "value": Object {
+        "home": "my home",
+        "name": "my name",
+      },
+    }
+  `);
 });
