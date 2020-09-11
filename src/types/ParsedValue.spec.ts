@@ -381,7 +381,9 @@ test('Handle Being Outside Cycles - objects', () => {
   const expected: RecursiveType = { child: null as any };
   expected.child = expected;
 
+  console.log('=== parse ===');
   const parsed = RecursiveType.parse(example);
+  console.log('=== parse end ===');
   expect(parsed).toEqual(expected);
 
   const serialized = RecursiveType.serialize(parsed);

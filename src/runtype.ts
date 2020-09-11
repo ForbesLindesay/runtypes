@@ -274,29 +274,29 @@ export type Cycle<T> = {
   unwrap: () => Result<T>;
 };
 
-function attemptMixin<T>(placehoder: any, value: T): Result<T> {
-  if (placehoder === value) {
+function attemptMixin<T>(placeholder: any, value: T): Result<T> {
+  if (placeholder === value) {
     return { success: true, value };
   }
-  if (Array.isArray(placehoder) && Array.isArray(value)) {
-    placehoder.splice(0, placehoder.length, ...value);
-    return { success: true, value: placehoder as any };
+  if (Array.isArray(placeholder) && Array.isArray(value)) {
+    placeholder.splice(0, placeholder.length, ...value);
+    return { success: true, value: placeholder as any };
   }
   if (
-    placehoder &&
-    typeof placehoder === 'object' &&
-    !Array.isArray(placehoder) &&
+    placeholder &&
+    typeof placeholder === 'object' &&
+    !Array.isArray(placeholder) &&
     value &&
     typeof value === 'object' &&
     !Array.isArray(value)
   ) {
-    Object.assign(placehoder, value);
-    return { success: true, value: placehoder };
+    Object.assign(placeholder, value);
+    return { success: true, value: placeholder };
   }
   return {
     success: false,
     message: `Cannot convert a value of type "${
-      Array.isArray(placehoder) ? 'Array' : typeof placehoder
+      Array.isArray(placeholder) ? 'Array' : typeof placeholder
     }" into a value of type "${
       value === null ? 'null' : Array.isArray(value) ? 'Array' : typeof value
     }" when it contains cycles.`,
@@ -305,7 +305,7 @@ function attemptMixin<T>(placehoder: any, value: T): Result<T> {
 
 export function createValidationPlaceholder<T>(
   placeholder: T,
-  fn: (placehoder: T) => Failure | undefined,
+  fn: (placeholder: T) => Failure | undefined,
 ): Cycle<T> {
   return innerMapValidationPlaceholder(
     placeholder,
@@ -315,7 +315,7 @@ export function createValidationPlaceholder<T>(
 
 export function mapValidationPlaceholder<T, S>(
   source: ResultWithCycle<T>,
-  fn: (placehoder: T) => Result<S>,
+  fn: (placeholder: T) => Result<S>,
   extraGuard?: RuntypeBase<S>,
 ): ResultWithCycle<S> {
   if (!source.success) return source;
@@ -340,7 +340,7 @@ export function mapValidationPlaceholder<T, S>(
 function innerMapValidationPlaceholder(
   placeholder: any,
   populate: () => Result<any>,
-  fn?: (placehoder: any) => Result<any>,
+  fn?: (placeholder: any) => Result<any>,
   extraGuard?: RuntypeBase<any>,
 ): Cycle<any> {
   let hasCycle = false;
@@ -369,7 +369,6 @@ function innerMapValidationPlaceholder(
       } else {
         const guardFailure =
           extraGuard && innerGuard(extraGuard, result.value, createGuardVisitedState());
-        cycle.placeholder = result.value;
         cache = guardFailure || result;
       }
 
