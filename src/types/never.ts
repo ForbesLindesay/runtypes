@@ -1,6 +1,6 @@
 import { Codec, create } from '../runtype';
 
-export interface Never extends Codec<never, never> {
+export interface Never extends Codec<never> {
   readonly tag: 'never';
 }
 

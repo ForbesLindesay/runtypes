@@ -11,7 +11,7 @@ import {
 import show from '../show';
 
 export interface ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>
-  extends Codec<TParsed, Static<TUnderlying>> {
+  extends Codec<TParsed> {
   readonly tag: 'parsed';
   readonly underlying: TUnderlying;
   readonly config: ParsedValueConfig<TUnderlying, TParsed>;

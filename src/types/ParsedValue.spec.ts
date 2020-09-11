@@ -313,7 +313,7 @@ test('Handle Being Outside Cycles', () => {
   const RecursiveTypeWithoutParse: Codec<RecursiveType> = Lazy(() =>
     Array(RecursiveTypeWithoutParse),
   );
-  const RecursiveType: Codec<RecursiveType, RecursiveTypePreParse> = Lazy(() =>
+  const RecursiveType: Codec<RecursiveType> = Lazy(() =>
     Array(Union(String, RecursiveType)).withParser({
       parse(arr) {
         return {
@@ -354,7 +354,7 @@ test('Handle Being Outside Cycles - objects', () => {
   const RecursiveTypeWithoutParse: Codec<RecursiveType> = Lazy(() =>
     Record({ child: RecursiveTypeWithoutParse }),
   );
-  const RecursiveType: Codec<RecursiveType, unknown> = Lazy(() =>
+  const RecursiveType: Codec<RecursiveType> = Lazy(() =>
     Record({ value: Union(String, Null), child: RecursiveType }).withParser({
       parse({ value, ...rest }) {
         return {
@@ -396,7 +396,7 @@ test('Fails when cycles modify types', () => {
   const RecursiveTypeWithoutParse: Codec<RecursiveType> = Lazy(() =>
     Record({ values: Array(RecursiveTypeWithoutParse) }),
   );
-  const RecursiveType: Codec<RecursiveType, RecursiveTypePreParse> = Lazy(
+  const RecursiveType: Codec<RecursiveType> = Lazy(
     () =>
       Array(RecursiveType).withParser({
         name: 'Parser<Array ↔ Object>',

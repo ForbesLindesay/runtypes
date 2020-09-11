@@ -19,6 +19,8 @@ export interface InternalValidation<TParsed> {
     innerValidate: <T>(runtype: RuntypeBase<T>, value: unknown) => Failure | undefined,
   ) => Failure | undefined;
   serialize?: (
+    // any is used here to ensure TypeScript still treats RuntypeBase as
+    // covariant.
     x: any,
     innerSerialize: (runtype: RuntypeBase, value: unknown) => Result<any>,
     innerSerializeToPlaceholder: (runtype: RuntypeBase, value: unknown) => ResultWithCycle<any>,
@@ -140,16 +142,16 @@ export interface Runtype<TParsed> extends RuntypeBase<TParsed> {
   withParser<TParsed>(value: ParsedValueConfig<this, TParsed>): ParsedValue<this, TParsed>;
 }
 
-export interface Codec<TParsed, TSerialized = TParsed> extends Runtype<TParsed> {
-  serialize: (x: TParsed) => TSerialized;
-  safeSerialize: (x: TParsed) => Result<TSerialized>;
+export interface Codec<TParsed> extends Runtype<TParsed> {
+  serialize: (x: TParsed) => unknown;
+  safeSerialize: (x: TParsed) => Result<unknown>;
 }
 /**
  * Obtains the static type associated with a Runtype.
  */
 export type Static<A extends RuntypeBase<any>> = A extends RuntypeBase<infer T> ? T : unknown;
 
-export function create<TConfig extends Codec<any, any>>(
+export function create<TConfig extends Codec<any>>(
   internalImplementation:
     | InternalValidation<Static<TConfig>>
     | InternalValidation<Static<TConfig>>['validate'],
