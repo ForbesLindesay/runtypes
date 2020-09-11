@@ -345,24 +345,6 @@ function innerMapValidationPlaceholder(
 ): Cycle<any> {
   let hasCycle = false;
   let cache: Result<any> | undefined;
-  const populateUncached = (): Result<any> => {
-    const sourceResult = populate();
-    const result = sourceResult.success && fn ? fn(sourceResult.value) : sourceResult;
-    if (!result.success) return result;
-    if (hasCycle) {
-      const unwrapResult = attemptMixin(placeholder, result.value);
-      const guardFailure =
-        unwrapResult.success &&
-        extraGuard &&
-        innerGuard(extraGuard, unwrapResult.value, createGuardVisitedState());
-      return guardFailure || unwrapResult;
-    } else {
-      const guardFailure =
-        extraGuard && innerGuard(extraGuard, result.value, createGuardVisitedState());
-      cycle.placeholder = result.value;
-      return guardFailure || result;
-    }
-  };
   const cycle: Cycle<any> = {
     success: true,
     cycle: true,
@@ -373,12 +355,28 @@ function innerMapValidationPlaceholder(
         return cache;
       }
       cache = { success: true, value: placeholder };
-      const result = populateUncached();
-      cache = result;
-      if (result.success) {
+
+      const sourceResult = populate();
+      const result = sourceResult.success && fn ? fn(sourceResult.value) : sourceResult;
+      if (!result.success) return result;
+      if (hasCycle) {
+        const unwrapResult = attemptMixin(placeholder, result.value);
+        const guardFailure =
+          unwrapResult.success &&
+          extraGuard &&
+          innerGuard(extraGuard, unwrapResult.value, createGuardVisitedState());
+        cache = guardFailure || unwrapResult;
+      } else {
+        const guardFailure =
+          extraGuard && innerGuard(extraGuard, result.value, createGuardVisitedState());
         cycle.placeholder = result.value;
+        cache = guardFailure || result;
       }
-      return result;
+
+      if (cache.success) {
+        cycle.placeholder = cache.value;
+      }
+      return cache;
     },
   };
   return cycle;
