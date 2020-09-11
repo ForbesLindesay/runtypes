@@ -161,3 +161,23 @@ test('UnionRecord - mixed', () => {
     }
   `);
 });
+
+test('Deprecated usage as object', () => {
+  const obj = Record({ value: String });
+  ta.assert<ta.Equal<ReturnType<typeof obj['check']>, { value: string }>>();
+  expect(obj.safeParse({ value: 'foo' })).toMatchInlineSnapshot(`
+    Object {
+      "success": true,
+      "value": Object {
+        "value": "foo",
+      },
+    }
+  `);
+  expect(obj.safeParse({ value: 24 })).toMatchInlineSnapshot(`
+    Object {
+      "key": "value",
+      "message": "Expected string, but was number",
+      "success": false,
+    }
+  `);
+});
