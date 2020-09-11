@@ -1,4 +1,5 @@
 import { Enum } from '..';
+import show from '../show';
 
 enum NumericEnum {
   foo = 12,
@@ -30,6 +31,8 @@ test('Numeric Enum', () => {
   `);
   const typed: NumericEnum = Enum('NumericEnum', NumericEnum).parse(20);
   expect(typed).toBe(NumericEnum.bar);
+
+  expect(show(Enum('NumericEnum', NumericEnum))).toMatchInlineSnapshot(`"NumericEnum"`);
 });
 
 test('String Enum', () => {
