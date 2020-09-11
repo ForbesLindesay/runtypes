@@ -305,7 +305,7 @@ function attemptMixin<T>(placehoder: any, value: T): Result<T> {
 
 export function createValidationPlaceholder<T>(
   placeholder: T,
-  fn: (placehoder: T) => Result<T> | undefined,
+  fn: (placehoder: T) => Failure | undefined,
 ): Cycle<T> {
   return innerMapValidationPlaceholder(
     placeholder,
@@ -360,7 +360,7 @@ function innerMapValidationPlaceholder(
       const result = sourceResult.success && fn ? fn(sourceResult.value) : sourceResult;
       if (!result.success) return result;
       if (hasCycle) {
-        const unwrapResult = attemptMixin(placeholder, result.value);
+        const unwrapResult = attemptMixin(cache.value, result.value);
         const guardFailure =
           unwrapResult.success &&
           extraGuard &&
@@ -376,6 +376,7 @@ function innerMapValidationPlaceholder(
       if (cache.success) {
         cycle.placeholder = cache.value;
       }
+
       return cache;
     },
   };

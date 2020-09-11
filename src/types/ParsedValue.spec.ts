@@ -14,6 +14,7 @@ import {
 import show from '../show';
 import { InstanceOf } from './instanceof';
 import { Lazy } from './lazy';
+import { Null } from './literal';
 
 test('TrimmedString', () => {
   const TrimmedString = ParsedValue(String, {
@@ -334,6 +335,51 @@ test('Handle Being Outside Cycles', () => {
 
   const expected: RecursiveType = [];
   expected.push(expected);
+
+  const parsed = RecursiveType.parse(example);
+  expect(parsed).toEqual(expected);
+
+  const serialized = RecursiveType.serialize(parsed);
+  expect(serialized).toEqual(example);
+
+  expect(() => RecursiveType.assert(parsed)).not.toThrow();
+  expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(
+    `"Expected array, but was string in [0]"`,
+  );
+});
+
+test('Handle Being Outside Cycles - objects', () => {
+  type RecursiveTypePreParse = { value: string | null; child: RecursiveTypePreParse };
+  type RecursiveType = { child: RecursiveType };
+  const RecursiveTypeWithoutParse: Codec<RecursiveType> = Lazy(() =>
+    Record({ child: RecursiveTypeWithoutParse }),
+  );
+  const RecursiveType: Codec<RecursiveType, unknown> = Lazy(() =>
+    Record({ value: Union(String, Null), child: RecursiveTypeWithoutParse }).withParser({
+      parse({ value, ...rest }) {
+        return {
+          success: true,
+          value: rest,
+        };
+      },
+      serialize(obj: RecursiveType) {
+        return {
+          success: true,
+          value: {
+            value: null,
+            child: obj.child,
+          },
+        };
+      },
+      test: RecursiveTypeWithoutParse,
+    }),
+  );
+
+  const example: RecursiveTypePreParse = { value: null, child: null as any };
+  example.child = example;
+
+  const expected: RecursiveType = { child: null as any };
+  expected.child = expected;
 
   const parsed = RecursiveType.parse(example);
   expect(parsed).toEqual(expected);
