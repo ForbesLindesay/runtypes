@@ -36,33 +36,13 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
   return create<ParsedValue<TUnderlying, TParsed>>(
     {
       validate: (value, _innerValidate, innerValidateToPlaceholder) => {
-        const validated = innerValidateToPlaceholder(underlying, value);
-
-        if (!validated.success) {
-          return validated;
-        }
-
-        if (!validated.cycle) {
-          const parsed = config.parse(validated.value as any);
-
-          if (!parsed.success) {
-            return parsed;
-          }
-
-          const testResult = config.test
-            ? innerGuard(config.test, parsed.value, createGuardVisitedState())
-            : undefined;
-
-          return testResult || parsed;
-        } else {
-          return mapValidationPlaceholder<any, TParsed>(
-            validated,
-            source => {
-              return config.parse(source);
-            },
-            config.test,
-          );
-        }
+        return mapValidationPlaceholder<any, TParsed>(
+          innerValidateToPlaceholder(underlying, value),
+          source => {
+            return config.parse(source);
+          },
+          config.test,
+        );
       },
       test(value, internalTest) {
         if (config.test) {

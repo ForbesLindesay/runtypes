@@ -308,57 +308,10 @@ export function createValidationPlaceholder<T>(
   placeholder: T,
   fn: (placehoder: T) => Result<T> | undefined,
 ): Cycle<T> {
-  let unwrapped = false;
-  let populating = false;
-  let cache: Result<T> | undefined;
-  const populateUncached = (): Result<T> => {
-    const result = fn(placeholder);
-    if (result) {
-      if (!result.success) {
-        return result;
-      }
-      if (unwrapped) {
-        return attemptMixin(placeholder, result.value);
-      } else {
-        cycle.placeholder = result.value;
-        return result;
-      }
-    }
-    return { success: true, value: placeholder };
-  };
-  const cycle: Cycle<T> = {
-    success: true,
-    cycle: true,
+  return innerMapValidationPlaceholder(
     placeholder,
-    populate: () => {
-      if (cache) return cache;
-      if (populating) {
-        return {
-          success: false,
-          message: 'Cyclic data structure could not be handled by this set of parsers.',
-        };
-      }
-      populating = true;
-      const result = populateUncached();
-      cache = result;
-      return result;
-    },
-    unwrap: () => {
-      if (cache) return cache;
-      if (populating) {
-        unwrapped = true;
-        return {
-          success: true,
-          value: cycle.placeholder as T,
-        };
-      }
-      populating = true;
-      const result = populateUncached();
-      cache = result;
-      return result;
-    },
-  };
-  return cycle;
+    () => fn(placeholder) || { success: true, value: placeholder },
+  );
 }
 
 export function mapValidationPlaceholder<T, S>(
@@ -367,22 +320,36 @@ export function mapValidationPlaceholder<T, S>(
   extraGuard?: RuntypeBase<S>,
 ): ResultWithCycle<S> {
   if (!source.success) return source;
-  if (!source.cycle) return fn(source.value);
-  const sourceCycle = source;
-  const placeholder: Partial<S> = (Array.isArray(sourceCycle.placeholder)
-    ? [...sourceCycle.placeholder]
-    : { ...sourceCycle.placeholder }) as any;
+  if (!source.cycle) {
+    const result = fn(source.value);
+    return (
+      (result.success &&
+        extraGuard &&
+        innerGuard(extraGuard, result.value, createGuardVisitedState())) ||
+      result
+    );
+  }
+  return innerMapValidationPlaceholder(
+    Array.isArray(source.placeholder) ? [...source.placeholder] : { ...source.placeholder },
+    () => source.populate(),
+    fn,
+    extraGuard,
+  );
+}
 
+function innerMapValidationPlaceholder(
+  placeholder: any,
+  populate: () => Result<any>,
+  fn?: (placehoder: any) => Result<any>,
+  extraGuard?: RuntypeBase<any>,
+): Cycle<any> {
   let unwrapped = false;
   let populating = false;
-  let cache: Result<S> | undefined;
-  const populateUncached = (): Result<S> => {
-    const sourceResult = sourceCycle.populate();
-    if (!sourceResult.success) return sourceResult;
-    const result = fn(sourceResult.value);
-    if (!result.success) {
-      return result;
-    }
+  let cache: Result<any> | undefined;
+  const populateUncached = (): Result<any> => {
+    const sourceResult = populate();
+    const result = sourceResult.success && fn ? fn(sourceResult.value) : sourceResult;
+    if (!result.success) return result;
     if (unwrapped) {
       const unwrapResult = attemptMixin(placeholder, result.value);
       const guardFailure =
@@ -397,7 +364,7 @@ export function mapValidationPlaceholder<T, S>(
       return guardFailure || result;
     }
   };
-  const cycle: Cycle<S> = {
+  const cycle: Cycle<any> = {
     success: true,
     cycle: true,
     placeholder,
@@ -423,7 +390,7 @@ export function mapValidationPlaceholder<T, S>(
         unwrapped = true;
         return {
           success: true,
-          value: placeholder as S,
+          value: placeholder,
         };
       }
       populating = true;
