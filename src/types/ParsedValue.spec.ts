@@ -355,7 +355,7 @@ test('Handle Being Outside Cycles - objects', () => {
     Record({ child: RecursiveTypeWithoutParse }),
   );
   const RecursiveType: Codec<RecursiveType, unknown> = Lazy(() =>
-    Record({ value: Union(String, Null), child: RecursiveTypeWithoutParse }).withParser({
+    Record({ value: Union(String, Null), child: RecursiveType }).withParser({
       parse({ value, ...rest }) {
         return {
           success: true,
@@ -366,7 +366,7 @@ test('Handle Being Outside Cycles - objects', () => {
         return {
           success: true,
           value: {
-            value: null,
+            value: 'hello world',
             child: obj.child,
           },
         };
@@ -375,24 +375,19 @@ test('Handle Being Outside Cycles - objects', () => {
     }),
   );
 
-  const example: RecursiveTypePreParse = { value: null, child: null as any };
+  const example: RecursiveTypePreParse = { value: 'hello world', child: null as any };
   example.child = example;
 
   const expected: RecursiveType = { child: null as any };
   expected.child = expected;
 
-  console.log('=== parse ===');
   const parsed = RecursiveType.parse(example);
-  console.log('=== parse end ===');
   expect(parsed).toEqual(expected);
 
   const serialized = RecursiveType.serialize(parsed);
   expect(serialized).toEqual(example);
 
   expect(() => RecursiveType.assert(parsed)).not.toThrow();
-  expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(
-    `"Expected array, but was string in [0]"`,
-  );
 });
 
 test('Fails when cycles modify types', () => {
