@@ -271,7 +271,6 @@ export type Cycle<T> = {
   success: true;
   cycle: true;
   placeholder: Partial<T>;
-  populate: () => Result<T>;
   unwrap: () => Result<T>;
 };
 
@@ -329,9 +328,10 @@ export function mapValidationPlaceholder<T, S>(
       result
     );
   }
+
   return innerMapValidationPlaceholder(
     Array.isArray(source.placeholder) ? [...source.placeholder] : { ...source.placeholder },
-    () => source.populate(),
+    () => source.unwrap(),
     fn,
     extraGuard,
   );
@@ -343,14 +343,13 @@ function innerMapValidationPlaceholder(
   fn?: (placehoder: any) => Result<any>,
   extraGuard?: RuntypeBase<any>,
 ): Cycle<any> {
-  let unwrapped = false;
-  let populating = false;
+  let hasCycle = false;
   let cache: Result<any> | undefined;
   const populateUncached = (): Result<any> => {
     const sourceResult = populate();
     const result = sourceResult.success && fn ? fn(sourceResult.value) : sourceResult;
     if (!result.success) return result;
-    if (unwrapped) {
+    if (hasCycle) {
       const unwrapResult = attemptMixin(placeholder, result.value);
       const guardFailure =
         unwrapResult.success &&
@@ -368,32 +367,12 @@ function innerMapValidationPlaceholder(
     success: true,
     cycle: true,
     placeholder,
-    populate: () => {
-      if (cache) return cache;
-      if (populating) {
-        return {
-          success: false,
-          message: 'Cyclic data structure could not be handled by this set of parsers.',
-        };
-      }
-      populating = true;
-      const result = populateUncached();
-      cache = result;
-      if (result.success) {
-        cycle.placeholder = result.value;
-      }
-      return result;
-    },
     unwrap: () => {
-      if (cache) return cache;
-      if (populating) {
-        unwrapped = true;
-        return {
-          success: true,
-          value: placeholder,
-        };
+      if (cache) {
+        hasCycle = true;
+        return cache;
       }
-      populating = true;
+      cache = { success: true, value: placeholder };
       const result = populateUncached();
       cache = result;
       if (result.success) {
@@ -524,7 +503,7 @@ export function innerGuard(
     (t, v) => innerGuard(t, v, $visited) || { success: true, value: v as any },
     (t, v) => innerGuard(t, v, $visited) || { success: true, value: v as any },
   );
-  if (result.cycle) result = result.populate();
+  if (result.cycle) result = result.unwrap();
   if (result.success) return undefined;
   else return result;
 }
