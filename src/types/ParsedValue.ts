@@ -7,6 +7,7 @@ import {
   innerGuard,
   createGuardVisitedState,
   mapValidationPlaceholder,
+  assertRuntype,
 } from '../runtype';
 import show from '../show';
 
@@ -33,6 +34,7 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
   underlying: TUnderlying,
   config: ParsedValueConfig<TUnderlying, TParsed>,
 ): ParsedValue<TUnderlying, TParsed> {
+  assertRuntype(underlying);
   return create<ParsedValue<TUnderlying, TParsed>>(
     {
       validate: (value, _innerValidate, innerValidateToPlaceholder) => {

@@ -1,4 +1,4 @@
-import { RuntypeBase, Static, create, Codec } from '../runtype';
+import { RuntypeBase, Static, create, Codec, assertRuntype } from '../runtype';
 import { String } from './string';
 import { Unknown } from './unknown';
 
@@ -35,6 +35,7 @@ export function Constraint<
   constraint: ConstraintCheck<TUnderlying>,
   options?: { name?: string; args?: TArgs },
 ): Constraint<TUnderlying, TConstrained, TArgs> {
+  assertRuntype(underlying);
   return create<Constraint<TUnderlying, TConstrained, TArgs>>(
     (value, innerValidate) => {
       const name = options && options.name;

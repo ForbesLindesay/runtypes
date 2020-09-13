@@ -344,7 +344,7 @@ test('Handle Being Outside Cycles', () => {
 
   expect(() => RecursiveType.assert(parsed)).not.toThrow();
   expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(
-    `"Expected array, but was string in [0]"`,
+    `"Expected array, but was \\"hello world\\" in [0]"`,
   );
 });
 

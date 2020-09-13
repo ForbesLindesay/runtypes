@@ -7,6 +7,7 @@ import {
   innerValidate,
   createVisitedState,
   OpaqueVisitedState,
+  assertRuntype,
 } from '../runtype';
 import show from '../show';
 import { LiteralValue, isLiteralRuntype } from './literal';
@@ -18,6 +19,7 @@ import { isBrandRuntype } from './brand';
 import { isConstraintRuntype } from './constraint';
 import { isParsedValueRuntype } from './ParsedValue';
 import { Never } from '..';
+import showValue from '../showValue';
 
 export type StaticUnion<TAlternatives extends readonly RuntypeBase<unknown>[]> = {
   [key in keyof TAlternatives]: TAlternatives[key] extends RuntypeBase<unknown>
@@ -30,14 +32,6 @@ export interface Union<TAlternatives extends readonly RuntypeBase<unknown>[]>
   readonly tag: 'union';
   readonly alternatives: TAlternatives;
   match: Match<TAlternatives>;
-}
-
-function valueToString(value: any) {
-  return value === null || typeof value === 'number' || typeof value === 'boolean'
-    ? value
-    : typeof value === 'string'
-    ? `'${value}'`
-    : typeof value;
 }
 
 function resolveUnderlyingType(runtype: RuntypeBase, mode: 'p' | 's' | 't'): RuntypeBase {
@@ -66,6 +60,7 @@ function resolveUnderlyingType(runtype: RuntypeBase, mode: 'p' | 's' | 't'): Run
 export function Union<
   TAlternatives extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
 >(...alternatives: TAlternatives): Union<TAlternatives> {
+  alternatives.forEach(a => assertRuntype(a));
   type TResult = StaticUnion<TAlternatives>;
   type InnerValidate = (x: any, innerValidate: InnerValidateHelper) => Result<TResult>;
   function validateWithKey(
@@ -86,7 +81,7 @@ export function Union<
           return {
             success: false,
             message: result.message,
-            key: `<${tag === 0 ? `[0]` : tag}: ${valueToString(value[tag])}>${
+            key: `<${tag === 0 ? `[0]` : tag}: ${showValue(value[tag])}>${
               result.key ? `.${result.key}` : ``
             }`,
           };
@@ -97,7 +92,7 @@ export function Union<
           success: false,
           message: `Expected ${Array.from(types.keys())
             .map(v => (typeof v === 'string' ? `'${v}'` : v))
-            .join(' | ')}, but was ${valueToString(value[tag])}`,
+            .join(' | ')}, but was ${showValue(value[tag])}`,
           key: tag === 0 ? `[0]` : tag,
         };
       }

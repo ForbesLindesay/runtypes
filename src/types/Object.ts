@@ -1,4 +1,11 @@
-import { Static, create, RuntypeBase, Codec, createValidationPlaceholder } from '../runtype';
+import {
+  Static,
+  create,
+  RuntypeBase,
+  Codec,
+  createValidationPlaceholder,
+  assertRuntype,
+} from '../runtype';
 import { hasKey } from '../util';
 import show from '../show';
 
@@ -59,6 +66,7 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
   isPartial: Part,
   isReadonly: RO,
 ): InternalRecord<O, Part, RO> {
+  Object.values(fields).forEach(f => assertRuntype(f));
   const runtype: InternalRecord<O, Part, RO> = create<InternalRecord<O, Part, RO>>(
     (x, innerValidate) => {
       if (x === null || x === undefined) {

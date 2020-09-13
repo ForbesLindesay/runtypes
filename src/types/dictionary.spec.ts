@@ -25,7 +25,7 @@ test('StringRecord', () => {
   expect(dictionary.safeParse({ foo: record, bar: { value: 24 } })).toMatchInlineSnapshot(`
     Object {
       "key": "bar.value",
-      "message": "Expected literal '42', but was '24'",
+      "message": "Expected literal 42, but was 24",
       "success": false,
     }
   `);

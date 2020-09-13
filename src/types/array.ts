@@ -1,4 +1,12 @@
-import { Static, create, RuntypeBase, Codec, createValidationPlaceholder } from '../runtype';
+import {
+  Static,
+  create,
+  RuntypeBase,
+  Codec,
+  createValidationPlaceholder,
+  assertRuntype,
+} from '../runtype';
+import showValue from '../showValue';
 
 export interface ReadonlyArray<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
   extends Codec<readonly Static<E>[]> {
@@ -22,12 +30,13 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
   element: TElement,
   isReadonly: IsReadonly,
 ): IsReadonly extends true ? ReadonlyArray<TElement> : Arr<TElement> {
+  assertRuntype(element);
   const result = create<ReadonlyArray<TElement> | Arr<TElement>>(
     (xs, innerValidate) => {
       if (!Array.isArray(xs)) {
         return {
           success: false,
-          message: `Expected array, but was ${xs === null ? xs : typeof xs}`,
+          message: `Expected array, but was ${showValue(xs)}`,
         };
       }
 

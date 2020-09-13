@@ -336,7 +336,7 @@ describe('check errors', () => {
     assertThrows(
       [false, '0', true],
       Tuple(Number, String, Boolean),
-      'Expected number, but was boolean in [0]',
+      'Expected number, but was false in [0]',
       '[0]',
     );
   });
@@ -363,7 +363,12 @@ describe('check errors', () => {
   });
 
   it('array', () => {
-    assertThrows([0, 2, 'test'], Array(Number), 'Expected number, but was string in [2]', '[2]');
+    assertThrows(
+      [0, 2, 'test'],
+      Array(Number),
+      'Expected number, but was "test" (i.e. a string literal) in [2]',
+      '[2]',
+    );
   });
 
   it('array nested', () => {
@@ -388,7 +393,7 @@ describe('check errors', () => {
     assertThrows(
       [0, 2, 'test'],
       Array(Number).asReadonly(),
-      'Expected number, but was string in [2]',
+      'Expected number, but was "test" (i.e. a string literal) in [2]',
       '[2]',
     );
   });
@@ -462,7 +467,7 @@ describe('check errors', () => {
         name: String,
         age: Number,
       }),
-      'Expected number, but was string in age',
+      'Expected number, but was "10" (i.e. a string literal) in age',
       'age',
     );
   });
@@ -499,7 +504,7 @@ describe('check errors', () => {
         name: String,
         age: Number,
       }).asReadonly(),
-      'Expected number, but was string in age',
+      'Expected number, but was "10" (i.e. a string literal) in age',
       'age',
     );
   });

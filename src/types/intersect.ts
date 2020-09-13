@@ -1,4 +1,11 @@
-import { Static, create, RuntypeBase, Codec, createValidationPlaceholder } from '../runtype';
+import {
+  Static,
+  create,
+  RuntypeBase,
+  Codec,
+  createValidationPlaceholder,
+  assertRuntype,
+} from '../runtype';
 import show from '../show';
 
 // We use the fact that a union of functions is effectively an intersection of parameters
@@ -24,6 +31,7 @@ export interface Intersect<
 export function Intersect<
   TIntersectees extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
 >(...intersectees: TIntersectees): Intersect<TIntersectees> {
+  intersectees.forEach(int => assertRuntype(int));
   return create<Intersect<TIntersectees>>(
     (value, innerValidate) => {
       if (Array.isArray(value)) {

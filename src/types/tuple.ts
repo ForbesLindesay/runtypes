@@ -1,4 +1,5 @@
-import { create, RuntypeBase, Codec, createValidationPlaceholder } from '../runtype';
+import { create, RuntypeBase, Codec, createValidationPlaceholder, assertRuntype } from '../runtype';
+import showValue from '../showValue';
 import { Array as Arr } from './array';
 import { Unknown } from './unknown';
 
@@ -23,6 +24,7 @@ export function isTupleRuntype(runtype: RuntypeBase): runtype is Tuple<readonly 
 export function Tuple<
   T extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]] | readonly []
 >(...components: T): Tuple<T> {
+  components.forEach(c => assertRuntype(c));
   return create<Tuple<T>>(
     (x, innerValidate) => {
       const validated = innerValidate(Arr(Unknown), x);
@@ -30,7 +32,7 @@ export function Tuple<
       if (!validated.success) {
         return {
           success: false,
-          message: `Expected tuple to be an array: ${validated.message}`,
+          message: `Expected tuple to be an array but was ${showValue(x)}`,
           key: validated.key,
         };
       }

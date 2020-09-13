@@ -1,4 +1,5 @@
 import { create, Codec } from '../runtype';
+import { showValueNonString } from '../showValue';
 
 export interface Boolean extends Codec<boolean> {
   readonly tag: 'boolean';
@@ -13,7 +14,7 @@ export const Boolean: Boolean = create<Boolean>(
       ? { success: true, value }
       : {
           success: false,
-          message: `Expected boolean, but was ${value === null ? value : typeof value}`,
+          message: `Expected boolean, but was ${showValueNonString(value)}`,
         },
   { tag: 'boolean' },
 );

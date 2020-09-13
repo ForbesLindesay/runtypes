@@ -2,10 +2,17 @@ import { Result, Union, Intersect, Constraint, ConstraintCheck, Brand, Failure }
 import show from './show';
 import { ValidationError } from './errors';
 import { ParsedValue, ParsedValueConfig } from './types/ParsedValue';
+import showValue from './showValue';
 
 export type InnerValidateHelper = <T>(runtype: RuntypeBase<T>, value: unknown) => Result<T>;
 declare const internalSymbol: unique symbol;
 const internal: typeof internalSymbol = ('__internal__' as unknown) as typeof internalSymbol;
+
+export function assertRuntype(value: RuntypeBase) {
+  if (!value || !value[internal]) {
+    throw new Error(`Expected runtype but got ${showValue(value)}`);
+  }
+}
 
 export type ResultWithCycle<T> = (Result<T> & { cycle?: false }) | Cycle<T>;
 export interface InternalValidation<TParsed> {

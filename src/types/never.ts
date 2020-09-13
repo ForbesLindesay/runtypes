@@ -1,4 +1,5 @@
 import { Codec, create } from '../runtype';
+import showValue from '../showValue';
 
 export interface Never extends Codec<never> {
   readonly tag: 'never';
@@ -10,7 +11,7 @@ export interface Never extends Codec<never> {
 export const Never: Never = create(
   value => ({
     success: false,
-    message: `Expected nothing, but was ${value === null ? value : typeof value}`,
+    message: `Expected nothing, but was ${showValue(value)}`,
   }),
   { tag: 'never' },
 ) as any;

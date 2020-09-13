@@ -1,4 +1,5 @@
 import { create, Codec } from '../runtype';
+import showValue from '../showValue';
 
 export interface Function extends Codec<(...args: any[]) => any> {
   readonly tag: 'function';
@@ -13,7 +14,7 @@ export const Function: Function = create<Function>(
       ? { success: true, value }
       : {
           success: false,
-          message: `Expected function, but was ${value === null ? value : typeof value}`,
+          message: `Expected function, but was ${showValue(value)}`,
         },
   { tag: 'function' },
 );

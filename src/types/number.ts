@@ -1,4 +1,5 @@
 import { Codec, create } from '../runtype';
+import { showValueNonString } from '../showValue';
 
 export interface Number extends Codec<number> {
   readonly tag: 'number';
@@ -13,7 +14,7 @@ export const Number: Number = create<Number>(
       ? { success: true, value }
       : {
           success: false,
-          message: `Expected number, but was ${value === null ? value : typeof value}`,
+          message: `Expected number, but was ${showValueNonString(value)}`,
         },
   { tag: 'number' },
 );

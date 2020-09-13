@@ -1,4 +1,5 @@
 import { create, Codec } from '../runtype';
+import showValue from '../showValue';
 
 export interface Enum<TEnum extends { [key: string]: number | string }>
   extends Codec<TEnum[keyof TEnum]> {
@@ -21,7 +22,7 @@ export function Enum<TEnum extends { [key: string]: number | string }>(
       } else {
         return {
           success: false,
-          message: `Expected ${name}, but was '${value}'`,
+          message: `Expected ${name}, but was ${showValue(value)}`,
         };
       }
     },

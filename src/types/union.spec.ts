@@ -24,15 +24,15 @@ describe('union', () => {
 
       expect(Shape.safeParse({ kind: 'square', size: new Date() })).toMatchInlineSnapshot(`
         Object {
-          "key": "<kind: 'square'>.size",
-          "message": "Expected number, but was object",
+          "key": "<kind: \\"square\\">.size",
+          "message": "Expected number, but was {}",
           "success": false,
         }
       `);
 
       expect(Shape.safeParse({ kind: 'rectangle', size: new Date() })).toMatchInlineSnapshot(`
         Object {
-          "key": "<kind: 'rectangle'>.width",
+          "key": "<kind: \\"rectangle\\">.width",
           "message": "Expected number, but was undefined",
           "success": false,
         }
@@ -40,7 +40,7 @@ describe('union', () => {
 
       expect(Shape.safeParse({ kind: 'circle', size: new Date() })).toMatchInlineSnapshot(`
         Object {
-          "key": "<kind: 'circle'>.radius",
+          "key": "<kind: \\"circle\\">.radius",
           "message": "Expected number, but was undefined",
           "success": false,
         }
@@ -49,7 +49,7 @@ describe('union', () => {
       expect(Shape.safeParse({ kind: 'other', size: new Date() })).toMatchInlineSnapshot(`
         Object {
           "key": "kind",
-          "message": "Expected 'square' | 'rectangle' | 'circle', but was 'other'",
+          "message": "Expected 'square' | 'rectangle' | 'circle', but was \\"other\\"",
           "success": false,
         }
       `);
@@ -71,7 +71,7 @@ describe('union', () => {
       expect(Shape.safeParse({ kind: { v: 'circle' }, size: new Date() })).toMatchInlineSnapshot(`
         Object {
           "key": "kind",
-          "message": "Expected 'square' | 'rectangle' | 'circle', but was object",
+          "message": "Expected 'square' | 'rectangle' | 'circle', but was {v: \\"circle\\"}",
           "success": false,
         }
       `);
@@ -105,15 +105,15 @@ describe('union', () => {
 
       expect(Shape.safeParse(['square', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
-          "key": "<[0]: 'square'>.[1].size",
-          "message": "Expected number, but was object",
+          "key": "<[0]: \\"square\\">.[1].size",
+          "message": "Expected number, but was {}",
           "success": false,
         }
       `);
 
       expect(Shape.safeParse(['rectangle', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
-          "key": "<[0]: 'rectangle'>.[1].width",
+          "key": "<[0]: \\"rectangle\\">.[1].width",
           "message": "Expected number, but was undefined",
           "success": false,
         }
@@ -121,7 +121,7 @@ describe('union', () => {
 
       expect(Shape.safeParse(['circle', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
-          "key": "<[0]: 'circle'>.[1].radius",
+          "key": "<[0]: \\"circle\\">.[1].radius",
           "message": "Expected number, but was undefined",
           "success": false,
         }
@@ -130,7 +130,7 @@ describe('union', () => {
       expect(Shape.safeParse(['other', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
           "key": "[0]",
-          "message": "Expected 'square' | 'rectangle' | 'circle', but was 'other'",
+          "message": "Expected 'square' | 'rectangle' | 'circle', but was \\"other\\"",
           "success": false,
         }
       `);

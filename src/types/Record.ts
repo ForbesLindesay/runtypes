@@ -1,4 +1,11 @@
-import { create, Static, RuntypeBase, Codec, createValidationPlaceholder } from '../runtype';
+import {
+  create,
+  Static,
+  RuntypeBase,
+  Codec,
+  createValidationPlaceholder,
+  assertRuntype,
+} from '../runtype';
 import show from '../show';
 import { String } from './string';
 import { Number } from './number';
@@ -63,6 +70,8 @@ function RecordInternal<K extends KeyRuntypeBase, V extends RuntypeBase<unknown>
   key: K,
   value: V,
 ): Record<K, V> {
+  assertRuntype(key);
+  assertRuntype(value);
   const expectedBaseType = lazyValue(() => getExpectedBaseType(key));
   const runtype: Record<K, V> = create<Record<K, V>>(
     (x, innerValidate) => {
