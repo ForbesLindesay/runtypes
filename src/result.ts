@@ -41,3 +41,14 @@ export type FullError = [string, ...FullError[]];
  * The result of a type validation.
  */
 export type Result<T> = Success<T> | Failure;
+
+export function showError(failure: Omit<Failure, 'success'>): string {
+  return failure.fullError
+    ? showFullError(failure.fullError)
+    : failure.key
+    ? `${failure.message} in ${failure.key}`
+    : failure.message;
+}
+export function showFullError([title, ...children]: FullError, indent: string = ''): string {
+  return [`${indent}${title}`, ...children.map(e => showFullError(e, `${indent}  `))].join('\n');
+}

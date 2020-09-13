@@ -40,7 +40,7 @@ test('Intersect can handle object keys being converted', () => {
       "fullError": Array [
         "Unable to assign {name: \\"example\\", url: \\"not a url\\"} to { url: URLString; }:",
         Array [
-          "The types of property url are not compatible:",
+          "The types of property \\"url\\" are not compatible:",
           Array [
             "Expected a valid URL but got 'not a url'",
           ],
@@ -124,7 +124,7 @@ test('Intersect can handle String + Brand', () => {
   `);
   expect(Intersect(String, Unknown.withBrand('my_brand')).safeParse(42)).toMatchInlineSnapshot(`
     Object {
-      "message": "Expected string, but was number",
+      "message": "Expected string, but was 42",
       "success": false,
     }
   `);

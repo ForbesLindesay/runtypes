@@ -177,16 +177,18 @@ export function Union<
         if (!fullError) {
           fullError = [
             `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
-            [
+            result.fullError || [
               `Unable to assign ${showValue(value)} to ${show(targetType)}:`,
-              result.fullError || [result.message],
+              [result.message],
             ],
           ];
         } else {
-          fullError.push([
-            `And unable to assign ${showValue(value)} to ${show(targetType)}:`,
-            result.fullError || [result.message],
-          ]);
+          fullError.push(
+            result.fullError || [
+              `And unable to assign ${showValue(value)} to ${show(targetType)}:`,
+              [result.message],
+            ],
+          );
         }
         if (result.key) {
           errorsWithKey++;

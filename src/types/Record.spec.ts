@@ -178,14 +178,14 @@ test('Deprecated usage as object', () => {
       "fullError": Array [
         "Unable to assign {value: 24} to { value: string; }:",
         Array [
-          "The types of property value are not compatible:",
+          "The types of property \\"value\\" are not compatible:",
           Array [
-            "Expected string, but was number",
+            "Expected string, but was 24",
           ],
         ],
       ],
       "key": "value",
-      "message": "Expected string, but was number",
+      "message": "Expected string, but was 24",
       "success": false,
     }
   `);

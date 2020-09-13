@@ -247,14 +247,14 @@ export function create<TConfig extends Codec<any>>(
   function parse(x: any) {
     const validated = safeParse(x);
     if (!validated.success) {
-      throw new ValidationError(validated.message, validated.key);
+      throw new ValidationError(validated);
     }
     return validated.value;
   }
   function serialize(x: any) {
     const validated = safeSerialize(x);
     if (!validated.success) {
-      throw new ValidationError(validated.message, validated.key);
+      throw new ValidationError(validated);
     }
     return validated.value;
   }
@@ -262,7 +262,7 @@ export function create<TConfig extends Codec<any>>(
   function assert(x: any): asserts x is Static<TConfig> {
     const validated = innerGuard(A, x, createGuardVisitedState());
     if (validated) {
-      throw new ValidationError(validated.message, validated.key);
+      throw new ValidationError(validated);
     }
   }
   function test(x: any): x is Static<TConfig> {

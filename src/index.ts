@@ -2,8 +2,10 @@ export { AsyncContract } from './asynccontract';
 export { Contract } from './contract';
 export { assertType } from './assertType';
 export type { Runtype, Codec, Static } from './runtype';
-export type { Success, Failure, Result } from './result';
+export type { Success, Failure, Result, showError } from './result';
 export { ValidationError } from './errors';
+export { default as showType } from './show';
+export { default as showValue } from './showValue';
 
 // TODO: should we export StaticIntersect, StaticTuple, StaticUnion etc.
 export { Array, ReadonlyArray } from './types/array';

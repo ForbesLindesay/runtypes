@@ -36,14 +36,15 @@ test('TrimmedString', () => {
   `);
   expect(TrimmedString.safeParse(42)).toMatchInlineSnapshot(`
     Object {
-      "message": "Expected string, but was number",
+      "message": "Expected string, but was 42",
       "success": false,
     }
   `);
 
-  expect(() => TrimmedString.assert(' foo bar ')).toThrowErrorMatchingInlineSnapshot(
-    `"Expected the string to be trimmed, but this one has whitespace"`,
-  );
+  expect(() => TrimmedString.assert(' foo bar ')).toThrowErrorMatchingInlineSnapshot(`
+"Unable to assign \\" foo bar \\" to WithConstraint<string>:
+  Expected the string to be trimmed, but this one has whitespace"
+`);
   expect(() => TrimmedString.assert('foo bar')).not.toThrow();
 });
 
@@ -63,9 +64,10 @@ test('DoubledNumber', () => {
     }
   `);
 
-  expect(() => DoubledNumber.assert(11)).toThrowErrorMatchingInlineSnapshot(
-    `"Expected an even number"`,
-  );
+  expect(() => DoubledNumber.assert(11)).toThrowErrorMatchingInlineSnapshot(`
+"Unable to assign 11 to WithConstraint<number>:
+  Expected an even number"
+`);
   expect(() => DoubledNumber.assert(12)).not.toThrow();
 
   expect(DoubledNumber.safeSerialize(10)).toMatchInlineSnapshot(`
@@ -95,9 +97,10 @@ test('DoubledNumber - 2', () => {
     }
   `);
 
-  expect(() => DoubledNumber.assert(11)).toThrowErrorMatchingInlineSnapshot(
-    `"Expected an even number"`,
-  );
+  expect(() => DoubledNumber.assert(11)).toThrowErrorMatchingInlineSnapshot(`
+"Unable to assign 11 to WithConstraint<number>:
+  Expected an even number"
+`);
   expect(() => DoubledNumber.assert(12)).not.toThrow();
 
   expect(DoubledNumber.safeSerialize(10)).toMatchInlineSnapshot(`
@@ -175,9 +178,12 @@ test('Upgrade Example', () => {
       "width": 10,
     }
   `);
-  expect(() => Shape.serialize({ version: 1, size: 20 } as any)).toThrowErrorMatchingInlineSnapshot(
-    `"Expected 2, but was 1 in version"`,
-  );
+  expect(() => Shape.serialize({ version: 1, size: 20 } as any))
+    .toThrowErrorMatchingInlineSnapshot(`
+"Unable to assign {version: 1, size: 20} to ParsedValue<{ version: 1; size: number; }> | { version: 2; width: number; height: number; }:
+  The types of [0] are not compatible:
+    Expected 2, but was 1"
+`);
 });
 
 test('URL', () => {
@@ -204,7 +210,7 @@ test('URL', () => {
   `);
   expect(URLString.safeParse(42)).toMatchInlineSnapshot(`
     Object {
-      "message": "Expected string, but was number",
+      "message": "Expected string, but was 42",
       "success": false,
     }
   `);
@@ -240,7 +246,7 @@ test('test is optional', () => {
   // validated after it has been serialized
   expect(TrimmedString.safeSerialize(42 as any)).toMatchInlineSnapshot(`
     Object {
-      "message": "Expected string, but was number",
+      "message": "Expected string, but was 42",
       "success": false,
     }
   `);
@@ -317,9 +323,12 @@ test('Handle Being Within Cycles', () => {
   expect(serialized).toEqual(example);
 
   expect(() => RecursiveType.assert(parsed)).not.toThrow();
-  expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(
-    `"Expected the string to be trimmed, but this one has whitespace in [0]"`,
-  );
+  expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(`
+"Unable to assign [\\" hello world \\", [\\" hello world \\" ... ]] to [TrimmedString, CIRCULAR tuple]:
+  The types of [0] are not compatible:
+    Unable to assign \\" hello world \\" to WithConstraint<string>:
+      Expected the string to be trimmed, but this one has whitespace"
+`);
 });
 
 test('Handle Being Outside Cycles', () => {
@@ -358,9 +367,11 @@ test('Handle Being Outside Cycles', () => {
   expect(serialized).toEqual(example);
 
   expect(() => RecursiveType.assert(parsed)).not.toThrow();
-  expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(
-    `"Expected array, but was \\"hello world\\" in [0]"`,
-  );
+  expect(() => RecursiveType.assert(serialized)).toThrowErrorMatchingInlineSnapshot(`
+"Unable to assign [\\"hello world\\", [\\"hello world\\" ... ]] to (CIRCULAR array)[]:
+  The types of [0] are not compatible:
+    Expected array, but was \\"hello world\\""
+`);
 });
 
 test('Handle Being Outside Cycles - objects', () => {

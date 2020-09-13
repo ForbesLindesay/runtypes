@@ -94,7 +94,7 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
                 fullError = [`Unable to assign ${showValue(x)} to ${show(runtype)}:`];
               }
               fullError.push([
-                `The types of property ${key} are not compatible:`,
+                `The types of property "${key}" are not compatible:`,
                 validated.fullError || [validated.message],
               ]);
               firstError = firstError || {

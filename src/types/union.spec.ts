@@ -29,7 +29,7 @@ describe('union', () => {
             Array [
               "Unable to assign {kind: \\"square\\", size: {}} to { kind: \\"square\\"; size: number; }:",
               Array [
-                "The types of property size are not compatible:",
+                "The types of property \\"size\\" are not compatible:",
                 Array [
                   "Expected number, but was {}",
                 ],
@@ -49,13 +49,13 @@ describe('union', () => {
             Array [
               "Unable to assign {kind: \\"rectangle\\", size: {}} to { kind: \\"rectangle\\"; width: number; height: number; }:",
               Array [
-                "The types of property width are not compatible:",
+                "The types of property \\"width\\" are not compatible:",
                 Array [
                   "Expected number, but was undefined",
                 ],
               ],
               Array [
-                "The types of property height are not compatible:",
+                "The types of property \\"height\\" are not compatible:",
                 Array [
                   "Expected number, but was undefined",
                 ],
@@ -75,7 +75,7 @@ describe('union', () => {
             Array [
               "Unable to assign {kind: \\"circle\\", size: {}} to { kind: \\"circle\\"; radius: number; }:",
               Array [
-                "The types of property radius are not compatible:",
+                "The types of property \\"radius\\" are not compatible:",
                 Array [
                   "Expected number, but was undefined",
                 ],
@@ -174,7 +174,7 @@ describe('union', () => {
                 Array [
                   "Unable to assign {size: {}} to { size: number; }:",
                   Array [
-                    "The types of property size are not compatible:",
+                    "The types of property \\"size\\" are not compatible:",
                     Array [
                       "Expected number, but was {}",
                     ],
@@ -200,13 +200,13 @@ describe('union', () => {
                 Array [
                   "Unable to assign {size: {}} to { width: number; height: number; }:",
                   Array [
-                    "The types of property width are not compatible:",
+                    "The types of property \\"width\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],
                   ],
                   Array [
-                    "The types of property height are not compatible:",
+                    "The types of property \\"height\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -232,7 +232,7 @@ describe('union', () => {
                 Array [
                   "Unable to assign {size: {}} to { radius: number; }:",
                   Array [
-                    "The types of property radius are not compatible:",
+                    "The types of property \\"radius\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -314,13 +314,13 @@ describe('union', () => {
                 Array [
                   "Unable to assign {size: 10} to { width: number; height: number; }:",
                   Array [
-                    "The types of property width are not compatible:",
+                    "The types of property \\"width\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],
                   ],
                   Array [
-                    "The types of property height are not compatible:",
+                    "The types of property \\"height\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -384,9 +384,16 @@ describe('union', () => {
         }
       `);
 
-      expect(() => extract([2, { size: 20 } as any])).toThrowErrorMatchingInlineSnapshot(
-        `"Expected number, but was undefined in <[0]: 2>.[1].width"`,
-      );
+      expect(() => extract([2, { size: 20 } as any])).toThrowErrorMatchingInlineSnapshot(`
+"Unable to assign [2, {size: 20}] to [1, { size: number; }] | [2, { width: number; height: number; }]:
+  Unable to assign [2, {size: 20}] to [2, { width: number; height: number; }]:
+    The types of [1] are not compatible:
+      Unable to assign {size: 20} to { width: number; height: number; }:
+        The types of property \\"width\\" are not compatible:
+          Expected number, but was undefined
+        The types of property \\"height\\" are not compatible:
+          Expected number, but was undefined"
+`);
     });
     it('should handle branded tags', () => {
       const Version1 = Tuple(Literal(1).withBrand('version'), Object({ size: Number }));
@@ -420,13 +427,13 @@ describe('union', () => {
                 Array [
                   "Unable to assign {size: 10} to { width: number; height: number; }:",
                   Array [
-                    "The types of property width are not compatible:",
+                    "The types of property \\"width\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],
                   ],
                   Array [
-                    "The types of property height are not compatible:",
+                    "The types of property \\"height\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -505,13 +512,13 @@ describe('union', () => {
                 Array [
                   "Unable to assign {size: 10} to { width: number; height: number; }:",
                   Array [
-                    "The types of property width are not compatible:",
+                    "The types of property \\"width\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],
                   ],
                   Array [
-                    "The types of property height are not compatible:",
+                    "The types of property \\"height\\" are not compatible:",
                     Array [
                       "Expected number, but was undefined",
                     ],

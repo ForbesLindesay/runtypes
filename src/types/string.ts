@@ -1,4 +1,5 @@
 import { create, Codec } from '../runtype';
+import showValue from '../showValue';
 
 export interface String extends Codec<string> {
   readonly tag: 'string';
@@ -13,7 +14,7 @@ export const String: String = create<String>(
       ? { success: true, value }
       : {
           success: false,
-          message: `Expected string, but was ${value === null ? value : typeof value}`,
+          message: `Expected string, but was ${showValue(value)}`,
         },
   { tag: 'string' },
 );
