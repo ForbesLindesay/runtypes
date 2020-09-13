@@ -565,7 +565,7 @@ describe('check errors', () => {
       Unknown.withConstraint<SomeClass>((o: any) => o.n > 3, {
         name: 'SomeClass',
       }),
-      'Failed SomeClass check',
+      '{n: 1} failed SomeClass check',
     );
   });
 

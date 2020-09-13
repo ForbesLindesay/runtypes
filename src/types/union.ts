@@ -13,7 +13,7 @@ import show from '../show';
 import { LiteralValue, isLiteralRuntype } from './literal';
 import { lazyValue, isLazyRuntype } from './lazy';
 import { isObjectRuntype } from './Object';
-import { Result } from '../result';
+import { FullError, Result } from '../result';
 import { isTupleRuntype } from './tuple';
 import { isBrandRuntype } from './brand';
 import { isConstraintRuntype } from './constraint';
@@ -84,16 +84,25 @@ export function Union<
             key: `<${tag === 0 ? `[0]` : tag}: ${showValue(value[tag])}>${
               result.key ? `.${result.key}` : ``
             }`,
+            fullError: [
+              `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
+              result.fullError || [result.message],
+            ],
           };
         }
         return result;
       } else {
+        const message = `Expected ${Array.from(types.keys())
+          .map(v => (typeof v === 'string' ? `'${v}'` : v))
+          .join(' | ')}, but was ${showValue(value[tag])}`;
         return {
           success: false,
-          message: `Expected ${Array.from(types.keys())
-            .map(v => (typeof v === 'string' ? `'${v}'` : v))
-            .join(' | ')}, but was ${showValue(value[tag])}`,
+          message,
           key: tag === 0 ? `[0]` : tag,
+          fullError: [
+            `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
+            [`The types of [0] are not compatible:`, [message]],
+          ],
         };
       }
     };
@@ -159,10 +168,25 @@ export function Union<
       let errorsWithKey = 0;
       let lastError;
       let lastErrorRuntype;
+      let fullError: FullError | undefined;
       for (const targetType of alternatives) {
         const result = innerValidate(targetType, value);
         if (result.success) {
           return result as Result<TResult>;
+        }
+        if (!fullError) {
+          fullError = [
+            `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
+            [
+              `Unable to assign ${showValue(value)} to ${show(targetType)}:`,
+              result.fullError || [result.message],
+            ],
+          ];
+        } else {
+          fullError.push([
+            `And unable to assign ${showValue(value)} to ${show(targetType)}:`,
+            result.fullError || [result.message],
+          ]);
         }
         if (result.key) {
           errorsWithKey++;
@@ -176,11 +200,13 @@ export function Union<
           success: false,
           message: lastError.message,
           key: `<${show(lastErrorRuntype)}>.${lastError.key}`,
+          fullError,
         };
       }
       return {
         success: false,
         message: `Expected ${show(runtype)}, but was ${value === null ? value : typeof value}`,
+        fullError,
       };
     };
   };

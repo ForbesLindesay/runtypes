@@ -1,4 +1,6 @@
+import { Failure, FullError } from '../result';
 import { create, RuntypeBase, Codec, createValidationPlaceholder, assertRuntype } from '../runtype';
+import show from '../show';
 import showValue from '../showValue';
 import { Array as Arr } from './array';
 import { Unknown } from './unknown';
@@ -25,7 +27,7 @@ export function Tuple<
   T extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]] | readonly []
 >(...components: T): Tuple<T> {
   components.forEach(c => assertRuntype(c));
-  return create<Tuple<T>>(
+  const result = create<Tuple<T>>(
     (x, innerValidate) => {
       const validated = innerValidate(Arr(Unknown), x);
 
@@ -45,19 +47,30 @@ export function Tuple<
       }
 
       return createValidationPlaceholder(validated.value as any, placeholder => {
+        let fullError: FullError | undefined = undefined;
+        let firstError: Failure | undefined;
         for (let i = 0; i < components.length; i++) {
           let validatedComponent = innerValidate(components[i], validated.value[i]);
 
           if (!validatedComponent.success) {
-            return {
+            if (!fullError) {
+              fullError = [`Unable to assign ${showValue(validated.value)} to ${show(result)}:`];
+            }
+            fullError.push([
+              `The types of [${i}] are not compatible:`,
+              validatedComponent.fullError || [validatedComponent.message],
+            ]);
+            firstError = firstError || {
               success: false,
               message: validatedComponent.message,
               key: validatedComponent.key ? `[${i}].${validatedComponent.key}` : `[${i}]`,
+              fullError: fullError,
             };
+          } else {
+            placeholder[i] = validatedComponent.value;
           }
-
-          placeholder[i] = validatedComponent.value;
         }
+        return firstError;
       });
     },
     {
@@ -70,4 +83,5 @@ export function Tuple<
       },
     },
   );
+  return result;
 }

@@ -27,11 +27,15 @@ export type Failure = {
    */
   message: string;
 
+  fullError?: FullError;
+
   /**
    * A key indicating the location at which validation failed.
    */
   key?: string;
 };
+
+export type FullError = [string, ...FullError[]];
 
 /**
  * The result of a type validation.

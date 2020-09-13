@@ -25,6 +25,15 @@ test('Array', () => {
   `);
   expect(dictionary.safeParse([record, 10, record])).toMatchInlineSnapshot(`
     Object {
+      "fullError": Array [
+        "Unable to assign [{value: 42}, 10, {value: 42}] to { value: 42; }[]:",
+        Array [
+          "The types of [1] are not compatible:",
+          Array [
+            "Expected { value: 42; }, but was number",
+          ],
+        ],
+      ],
       "key": "[1]",
       "message": "Expected { value: 42; }, but was number",
       "success": false,
@@ -53,6 +62,15 @@ test('Array.asReadonly', () => {
   `);
   expect(dictionary.safeParse([record, 10, record])).toMatchInlineSnapshot(`
     Object {
+      "fullError": Array [
+        "Unable to assign [{value: 42}, 10, {value: 42}] to readonly { value: 42; }[]:",
+        Array [
+          "The types of [1] are not compatible:",
+          Array [
+            "Expected { value: 42; }, but was number",
+          ],
+        ],
+      ],
       "key": "[1]",
       "message": "Expected { value: 42; }, but was number",
       "success": false,
@@ -81,6 +99,15 @@ test('ReadonlyArray', () => {
   `);
   expect(dictionary.safeParse([record, 10, record])).toMatchInlineSnapshot(`
     Object {
+      "fullError": Array [
+        "Unable to assign [{value: 42}, 10, {value: 42}] to readonly { value: 42; }[]:",
+        Array [
+          "The types of [1] are not compatible:",
+          Array [
+            "Expected { value: 42; }, but was number",
+          ],
+        ],
+      ],
       "key": "[1]",
       "message": "Expected { value: 42; }, but was number",
       "success": false,

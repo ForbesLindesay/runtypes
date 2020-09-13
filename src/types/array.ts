@@ -1,3 +1,4 @@
+import { Failure, FullError } from '../result';
 import {
   Static,
   create,
@@ -6,6 +7,7 @@ import {
   createValidationPlaceholder,
   assertRuntype,
 } from '../runtype';
+import show from '../show';
 import showValue from '../showValue';
 
 export interface ReadonlyArray<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
@@ -41,18 +43,29 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
       }
 
       return createValidationPlaceholder([...xs], placeholder => {
+        let fullError: FullError | undefined = undefined;
+        let firstError: Failure | undefined;
         for (let i = 0; i < xs.length; i++) {
           const validated = innerValidate(element, xs[i]);
           if (!validated.success) {
-            return {
+            if (!fullError) {
+              fullError = [`Unable to assign ${showValue(xs)} to ${show(result)}:`];
+            }
+            fullError.push([
+              `The types of [${i}] are not compatible:`,
+              validated.fullError || [validated.message],
+            ]);
+            firstError = firstError || {
               success: false,
               message: validated.message,
               key: validated.key ? `[${i}].${validated.key}` : `[${i}]`,
+              fullError: fullError,
             };
           } else {
             placeholder[i] = validated.value;
           }
         }
+        return firstError;
       });
     },
     {

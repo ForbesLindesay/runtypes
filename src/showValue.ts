@@ -1,4 +1,8 @@
-export default function showValue(value: unknown, remainingDepth: number = 3): string {
+export default function showValue(
+  value: unknown,
+  remainingDepth: number = 3,
+  remainingLength: number = 30,
+): string {
   switch (typeof value) {
     case 'bigint':
     case 'boolean':
@@ -15,21 +19,42 @@ export default function showValue(value: unknown, remainingDepth: number = 3): s
         return 'null';
       }
       if (Array.isArray(value)) {
-        if (remainingDepth === 0) {
+        if (remainingDepth === 0 || remainingLength === 0) {
           return '[Array]';
         } else {
-          return `[${value.map(v => showValue(v, remainingDepth - 1)).join(', ')}]`;
+          let result = '[';
+          let i = 0;
+          for (i = 0; i < value.length && remainingLength > result.length; i++) {
+            if (i !== 0) result += ', ';
+            result += showValue(value[i], remainingDepth - 1, remainingLength - result.length);
+          }
+          if (i < value.length) {
+            result += ' ... ';
+          }
+          result += ']';
+          return result;
         }
       }
       if (remainingDepth === 0) {
         return '{Object}';
       } else {
-        return `{${Object.entries(value)
-          .map(
-            ([key, v]) =>
-              `${/\s/.test(key) ? JSON.stringify(key) : key}: ${showValue(v, remainingDepth - 1)}`,
-          )
-          .join(', ')}}`;
+        const props = Object.entries(value);
+        let result = '{';
+        let i = 0;
+        for (i = 0; i < props.length && remainingLength > result.length; i++) {
+          if (i !== 0) result += ', ';
+          const [key, v] = props[i];
+          result += `${/\s/.test(key) ? JSON.stringify(key) : key}: ${showValue(
+            v,
+            remainingDepth - 1,
+            remainingLength - result.length,
+          )}`;
+        }
+        if (i < props.length) {
+          result += ' ... ';
+        }
+        result += '}';
+        return result;
       }
   }
 }

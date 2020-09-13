@@ -109,6 +109,12 @@ test('DoubledNumber - 2', () => {
 
   expect(DoubledNumber.safeSerialize(11)).toMatchInlineSnapshot(`
     Object {
+      "fullError": Array [
+        "Unable to assign 11 to WithConstraint<number>:",
+        Array [
+          "Expected an even number",
+        ],
+      ],
       "message": "Expected an even number",
       "success": false,
     }
@@ -147,6 +153,15 @@ test('Upgrade Example', () => {
   `);
   expect(Shape.safeSerialize({ version: 1, size: 20 } as any)).toMatchInlineSnapshot(`
     Object {
+      "fullError": Array [
+        "Unable to assign {version: 1, size: 20} to ParsedValue<{ version: 1; size: number; }> | { version: 2; width: number; height: number; }:",
+        Array [
+          "The types of [0] are not compatible:",
+          Array [
+            "Expected 2, but was 1",
+          ],
+        ],
+      ],
       "key": "version",
       "message": "Expected 2, but was 1",
       "success": false,

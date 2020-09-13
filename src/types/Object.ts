@@ -8,6 +8,9 @@ import {
 } from '../runtype';
 import { hasKey } from '../util';
 import show from '../show';
+import { Failure } from '..';
+import { FullError } from '../result';
+import showValue from '../showValue';
 
 export type RecordFields = { readonly [_: string]: RuntypeBase<unknown> };
 type RecordStaticType<
@@ -80,20 +83,32 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
       }
 
       return createValidationPlaceholder({} as any, (placeholder: any) => {
+        let fullError: FullError | undefined = undefined;
+        let firstError: Failure | undefined;
         for (const key in fields) {
           if (!isPartial || (hasKey(key, x) && x[key] !== undefined)) {
             const value = isPartial || hasKey(key, x) ? x[key] : undefined;
             let validated = innerValidate(fields[key], value);
             if (!validated.success) {
-              return {
+              if (!fullError) {
+                fullError = [`Unable to assign ${showValue(x)} to ${show(runtype)}:`];
+              }
+              fullError.push([
+                `The types of property ${key} are not compatible:`,
+                validated.fullError || [validated.message],
+              ]);
+              firstError = firstError || {
                 success: false,
                 message: validated.message,
                 key: validated.key ? `${key}.${validated.key}` : key,
+                fullError: fullError,
               };
+            } else {
+              placeholder[key] = validated.value;
             }
-            placeholder[key] = validated.value;
           }
         }
+        return firstError;
       });
     },
     {

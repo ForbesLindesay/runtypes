@@ -175,6 +175,15 @@ test('Deprecated usage as object', () => {
   `);
   expect(obj.safeParse({ value: 24 })).toMatchInlineSnapshot(`
     Object {
+      "fullError": Array [
+        "Unable to assign {value: 24} to { value: string; }:",
+        Array [
+          "The types of property value are not compatible:",
+          Array [
+            "Expected string, but was number",
+          ],
+        ],
+      ],
       "key": "value",
       "message": "Expected string, but was number",
       "success": false,

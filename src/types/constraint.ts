@@ -1,5 +1,6 @@
 import { RuntypeBase, Static, create, Codec, assertRuntype } from '../runtype';
-import { String } from './string';
+import show from '../show';
+import showValue from '../showValue';
 import { Unknown } from './unknown';
 
 export type ConstraintCheck<A extends RuntypeBase<unknown>> = (x: Static<A>) => boolean | string;
@@ -36,7 +37,9 @@ export function Constraint<
   options?: { name?: string; args?: TArgs },
 ): Constraint<TUnderlying, TConstrained, TArgs> {
   assertRuntype(underlying);
-  return create<Constraint<TUnderlying, TConstrained, TArgs>>(
+  const runtype: Constraint<TUnderlying, TConstrained, TArgs> = create<
+    Constraint<TUnderlying, TConstrained, TArgs>
+  >(
     (value, innerValidate) => {
       const name = options && options.name;
       const validated = innerValidate(underlying, value);
@@ -46,8 +49,17 @@ export function Constraint<
       }
 
       const result = constraint(validated.value as any);
-      if (String.test(result)) return { success: false, message: result };
-      else if (!result) return { success: false, message: `Failed ${name || 'constraint'} check` };
+      if (!result || typeof result === 'string') {
+        const message =
+          typeof result === 'string'
+            ? result
+            : `${showValue(value)} failed ${name || 'constraint'} check`;
+        return {
+          success: false,
+          message,
+          fullError: [`Unable to assign ${showValue(value)} to ${show(runtype)}:`, [message]],
+        };
+      }
       return { success: true, value: validated.value as TConstrained };
     },
     {
@@ -58,10 +70,11 @@ export function Constraint<
       args: options && options.args,
 
       show({ needsParens, showChild }) {
-        return (options && options.name) || showChild(underlying, needsParens);
+        return (options && options.name) || `WithConstraint<${showChild(underlying, needsParens)}>`;
       },
     },
   );
+  return runtype;
 }
 
 export interface Guard<TConstrained, TArgs = unknown>
