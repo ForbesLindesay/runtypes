@@ -17,8 +17,7 @@ export function InstanceOf<V>(ctor: Constructor<V>): InstanceOf<V> {
     {
       ctor: ctor,
       show() {
-        const name = (ctor as any).name;
-        return `InstanceOf<${name}>`;
+        return `InstanceOf<${(ctor as any).name}>`;
       },
     },
   );
