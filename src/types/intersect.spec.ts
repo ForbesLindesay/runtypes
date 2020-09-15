@@ -129,3 +129,9 @@ test('Intersect can handle String + Brand', () => {
     }
   `);
 });
+
+test('Intersect validates its inputs', () => {
+  expect(() => Intersect([String, Unknown] as any)).toThrowErrorMatchingInlineSnapshot(
+    `"Expected Runtype but got [Runtype<string>, Runtype<unknown>]"`,
+  );
+});

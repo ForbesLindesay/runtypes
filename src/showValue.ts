@@ -1,3 +1,5 @@
+import { isRuntype } from './runtype';
+
 export default function showValue(
   value: unknown,
   remainingDepth: number = 3,
@@ -30,6 +32,9 @@ export default function showValue(
           result += ']';
           return result;
         }
+      }
+      if (isRuntype(value)) {
+        return value.toString();
       }
       if (remainingDepth === 0) {
         return '{Object}';
