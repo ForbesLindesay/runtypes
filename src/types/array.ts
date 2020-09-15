@@ -75,12 +75,9 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
     },
   );
   if (!isReadonly) {
-    (result as any).asReadonly = asReadonly;
+    (result as any).asReadonly = () => InternalArr(element, true);
   }
   return result as any;
-  function asReadonly(): ReadonlyArray<TElement> {
-    return InternalArr(element, true);
-  }
 }
 
 function Arr<TElement extends RuntypeBase<unknown>>(element: TElement): Arr<TElement> {

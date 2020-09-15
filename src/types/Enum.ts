@@ -17,13 +17,7 @@ export function Enum<TEnum extends { [key: string]: number | string }>(
   );
   return create<Enum<TEnum>>(
     'enum',
-    value => {
-      if (enumValues.has(value as any)) {
-        return success(value as any);
-      } else {
-        return expected(name, value);
-      }
-    },
+    value => (enumValues.has(value as any) ? success(value as any) : expected(name, value)),
     {
       enumObject: e,
       show: () => name,

@@ -20,16 +20,16 @@ export function isRuntype(value: unknown): value is RuntypeBase {
 
 export type ResultWithCycle<T> = (Result<T> & { cycle?: false }) | Cycle<T>;
 export interface InternalValidation<TParsed> {
-  validate(
+  p(
     x: any,
     innerValidate: <T>(runtype: RuntypeBase<T>, value: unknown) => Result<T>,
     innerValidateToPlaceholder: <T>(runtype: RuntypeBase<T>, value: unknown) => ResultWithCycle<T>,
   ): ResultWithCycle<TParsed>;
-  test?: (
+  t?: (
     x: any,
     innerValidate: <T>(runtype: RuntypeBase<T>, value: unknown) => Failure | undefined,
   ) => Failure | undefined;
-  serialize?: (
+  s?: (
     // any is used here to ensure TypeScript still treats RuntypeBase as
     // covariant.
     x: any,
@@ -193,7 +193,7 @@ export function create<TConfig extends Codec<any>>(
   tag: TConfig['tag'],
   internalImplementation:
     | InternalValidation<Static<TConfig>>
-    | InternalValidation<Static<TConfig>>['validate'],
+    | InternalValidation<Static<TConfig>>['p'],
   config: Omit<
     TConfig,
     | typeof internal
@@ -219,26 +219,48 @@ export function create<TConfig extends Codec<any>>(
   const A: Codec<Static<TConfig>> = {
     ...config,
     tag,
-    assert,
+    assert(x: any): asserts x is Static<TConfig> {
+      const validated = innerGuard(A, x, createGuardVisitedState());
+      if (validated) {
+        throw new ValidationError(validated);
+      }
+    },
     parse,
     check: parse,
     safeParse,
     validate: safeParse,
     test,
     guard: test,
-    serialize,
+    serialize(x: any) {
+      const validated = safeSerialize(x);
+      if (!validated.success) {
+        throw new ValidationError(validated);
+      }
+      return validated.value;
+    },
     safeSerialize,
-    Or,
-    And,
-    withConstraint,
-    withGuard,
-    withBrand,
-    withParser,
+    Or: <B extends RuntypeBase>(B: B): Union<[Codec<Static<TConfig>>, B]> => Union(A, B),
+    And: <B extends RuntypeBase>(B: B): Intersect<[Codec<Static<TConfig>>, B]> => Intersect(A, B),
+    withConstraint: <T extends Static<TConfig>, K = unknown>(
+      constraint: ConstraintCheck<Codec<Static<TConfig>>>,
+      options?: { name?: string; args?: K },
+    ): Constraint<Codec<Static<TConfig>>, T, K> =>
+      Constraint<Codec<Static<TConfig>>, T, K>(A, constraint, options),
+    withGuard: <T extends Static<TConfig>, K = unknown>(
+      test: (x: Static<TConfig>) => x is T,
+      options?: { name?: string; args?: K },
+    ): Constraint<Codec<Static<TConfig>>, T, K> =>
+      Constraint<Codec<Static<TConfig>>, T, K>(A, test, options),
+    withBrand: <B extends string>(B: B): Brand<B, Codec<Static<TConfig>>> =>
+      Brand<B, Codec<Static<TConfig>>>(B, A),
+    withParser: <TParsed>(
+      config: ParsedValueConfig<Codec<Static<TConfig>>, TParsed>,
+    ): ParsedValue<Codec<Static<TConfig>>, TParsed> => ParsedValue(A as any, config),
     toString: () => `Runtype<${show(A)}>`,
     [internal]:
       typeof internalImplementation === 'function'
         ? {
-            validate: internalImplementation,
+            p: internalImplementation,
           }
         : internalImplementation,
   };
@@ -258,55 +280,10 @@ export function create<TConfig extends Codec<any>>(
     }
     return validated.value;
   }
-  function serialize(x: any) {
-    const validated = safeSerialize(x);
-    if (!validated.success) {
-      throw new ValidationError(validated);
-    }
-    return validated.value;
-  }
 
-  function assert(x: any): asserts x is Static<TConfig> {
-    const validated = innerGuard(A, x, createGuardVisitedState());
-    if (validated) {
-      throw new ValidationError(validated);
-    }
-  }
   function test(x: any): x is Static<TConfig> {
     const validated = innerGuard(A, x, createGuardVisitedState());
     return validated === undefined;
-  }
-
-  function Or<B extends RuntypeBase>(B: B): Union<[Codec<Static<TConfig>>, B]> {
-    return Union(A, B);
-  }
-
-  function And<B extends RuntypeBase>(B: B): Intersect<[Codec<Static<TConfig>>, B]> {
-    return Intersect(A, B);
-  }
-
-  function withConstraint<T extends Static<TConfig>, K = unknown>(
-    constraint: ConstraintCheck<Codec<Static<TConfig>>>,
-    options?: { name?: string; args?: K },
-  ): Constraint<Codec<Static<TConfig>>, T, K> {
-    return Constraint<Codec<Static<TConfig>>, T, K>(A, constraint, options);
-  }
-
-  function withGuard<T extends Static<TConfig>, K = unknown>(
-    test: (x: Static<TConfig>) => x is T,
-    options?: { name?: string; args?: K },
-  ): Constraint<Codec<Static<TConfig>>, T, K> {
-    return Constraint<Codec<Static<TConfig>>, T, K>(A, test, options);
-  }
-
-  function withBrand<B extends string>(B: B): Brand<B, Codec<Static<TConfig>>> {
-    return Brand<B, Codec<Static<TConfig>>>(B, A);
-  }
-
-  function withParser<TParsed>(
-    config: ParsedValueConfig<Codec<Static<TConfig>>, TParsed>,
-  ): ParsedValue<Codec<Static<TConfig>>, TParsed> {
-    return ParsedValue(A as any, config);
   }
 }
 
@@ -474,7 +451,7 @@ function innerValidateToPlaceholder<T>(
   if (cached !== undefined) {
     return cached;
   }
-  const result = validator.validate(
+  const result = validator.p(
     value,
     (t, v) => innerValidate(t, v, $visited),
     (t, v) => innerValidateToPlaceholder(t, v, $visited),
@@ -508,7 +485,7 @@ function innerSerializeToPlaceholder(
   if (cached !== undefined) {
     return cached;
   }
-  let result = (validator.serialize || validator.validate)(
+  let result = (validator.s || validator.p)(
     value,
     (t, v) => innerSerialize(t, v, $visited),
     (t, v) => innerSerializeToPlaceholder(t, v, $visited),
@@ -532,10 +509,10 @@ export function innerGuard(
     if (cached) return undefined;
     visited.set(targetType, (visited.get(targetType) || new Set()).add(value));
   }
-  if (validator.test) {
-    return validator.test(value, (t, v) => innerGuard(t, v, $visited));
+  if (validator.t) {
+    return validator.t(value, (t, v) => innerGuard(t, v, $visited));
   }
-  let result = validator.validate(
+  let result = validator.p(
     value,
     (t, v) => innerGuard(t, v, $visited) || success(v as any),
     (t, v) => innerGuard(t, v, $visited) || success(v as any),

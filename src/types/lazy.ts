@@ -8,10 +8,7 @@ export interface Lazy<TUnderlying extends RuntypeBase<unknown>> extends Codec<St
 export function lazyValue<T>(fn: () => T) {
   let value: T;
   return () => {
-    if (!value) {
-      value = fn();
-    }
-    return value;
+    return value || (value = fn());
   };
 }
 
@@ -29,9 +26,8 @@ export function Lazy<TUnderlying extends RuntypeBase<unknown>>(
 
   return create<Lazy<TUnderlying>>(
     'lazy',
-    (value, _innerValidate, innerValidateToPlaceholder) => {
-      return innerValidateToPlaceholder(underlying(), value) as any;
-    },
+    (value, _innerValidate, innerValidateToPlaceholder) =>
+      innerValidateToPlaceholder(underlying(), value) as any,
     {
       underlying,
       show({ showChild, needsParens }) {

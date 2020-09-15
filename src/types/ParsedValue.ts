@@ -38,25 +38,21 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
   return create<ParsedValue<TUnderlying, TParsed>>(
     'parsed',
     {
-      validate: (value, _innerValidate, innerValidateToPlaceholder) => {
+      p: (value, _innerValidate, innerValidateToPlaceholder) => {
         return mapValidationPlaceholder<any, TParsed>(
           innerValidateToPlaceholder(underlying, value),
-          source => {
-            return config.parse(source);
-          },
+          source => config.parse(source),
           config.test,
         );
       },
-      test(value, internalTest) {
-        if (config.test) {
-          return internalTest(config.test, value);
-        } else {
-          return failure(
-            `${config.name || `ParsedValue<${show(underlying)}>`} does not support Runtype.test`,
-          );
-        }
+      t(value, internalTest) {
+        return config.test
+          ? internalTest(config.test, value)
+          : failure(
+              `${config.name || `ParsedValue<${show(underlying)}>`} does not support Runtype.test`,
+            );
       },
-      serialize(value, _internalSerialize, _internalSerializeToPlaceholder) {
+      s(value, _internalSerialize, _internalSerializeToPlaceholder) {
         if (!config.serialize) {
           return failure(
             `${

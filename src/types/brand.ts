@@ -21,9 +21,8 @@ export function Brand<B extends string, A extends RuntypeBase<unknown>>(brand: B
   assertRuntype(entity);
   return create<Brand<B, A>>(
     'brand',
-    (value, _innerValidate, innerValidateToPlaceholder) => {
-      return innerValidateToPlaceholder(entity, value) as any;
-    },
+    (value, _innerValidate, innerValidateToPlaceholder) =>
+      innerValidateToPlaceholder(entity, value) as any,
     {
       brand,
       entity,

@@ -210,13 +210,13 @@ export function Union<
   const runtype: Union<TAlternatives> = create<Union<TAlternatives>>(
     'union',
     {
-      validate: (value, visited) => {
+      p: (value, visited) => {
         return innerValidator().p(value, visited);
       },
-      serialize: (value, visited) => {
+      s: (value, visited) => {
         return innerValidator().s(value, visited);
       },
-      test: (value, visited) => {
+      t: (value, visited) => {
         const result = innerValidator().s(value, (t, v) => visited(t, v) || success(v as any));
         return result.success ? undefined : result;
       },
