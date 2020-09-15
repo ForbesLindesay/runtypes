@@ -13,7 +13,7 @@ import show from '../show';
 import { LiteralValue, isLiteralRuntype } from './literal';
 import { lazyValue, isLazyRuntype } from './lazy';
 import { isObjectRuntype } from './Object';
-import { FullError, Result } from '../result';
+import { expected, failure, FullError, Result, success } from '../result';
 import { isTupleRuntype } from './tuple';
 import { isBrandRuntype } from './brand';
 import { isConstraintRuntype } from './constraint';
@@ -69,18 +69,13 @@ export function Union<
   ): InnerValidate {
     return (value, innerValidate) => {
       if (!value || typeof value !== 'object') {
-        return {
-          success: false,
-          message: `Expected ${show(runtype)}, but was ${value === null ? value : typeof value}`,
-        };
+        return expected(runtype, value);
       }
       const validator = types.get(value[tag]);
       if (validator) {
         const result = innerValidate(validator, value);
         if (!result.success) {
-          return {
-            success: false,
-            message: result.message,
+          return failure(result.message, {
             key: `<${tag === 0 ? `[0]` : tag}: ${showValue(value[tag])}>${
               result.key ? `.${result.key}` : ``
             }`,
@@ -88,22 +83,20 @@ export function Union<
               `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
               result.fullError || [result.message],
             ],
-          };
+          });
         }
         return result;
       } else {
         const message = `Expected ${Array.from(types.keys())
           .map(v => (typeof v === 'string' ? `'${v}'` : v))
           .join(' | ')}, but was ${showValue(value[tag])}`;
-        return {
-          success: false,
-          message,
+        return failure(message, {
           key: tag === 0 ? `[0]` : tag,
           fullError: [
             `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
             [`The types of [0] are not compatible:`, [message]],
           ],
-        };
+        });
       }
     };
   }
@@ -198,18 +191,14 @@ export function Union<
       }
 
       if (lastError && lastErrorRuntype && errorsWithKey === 1) {
-        return {
-          success: false,
-          message: lastError.message,
+        return failure(lastError.message, {
           key: `<${show(lastErrorRuntype)}>.${lastError.key}`,
           fullError,
-        };
+        });
       }
-      return {
-        success: false,
-        message: `Expected ${show(runtype)}, but was ${value === null ? value : typeof value}`,
+      return expected(runtype, value, {
         fullError,
-      };
+      });
     };
   };
   const innerValidator = lazyValue(() => ({
@@ -219,6 +208,7 @@ export function Union<
   }));
 
   const runtype: Union<TAlternatives> = create<Union<TAlternatives>>(
+    'union',
     {
       validate: (value, visited) => {
         return innerValidator().p(value, visited);
@@ -227,15 +217,11 @@ export function Union<
         return innerValidator().s(value, visited);
       },
       test: (value, visited) => {
-        const result = innerValidator().s(
-          value,
-          (t, v) => visited(t, v) || { success: true, value: v as any },
-        );
+        const result = innerValidator().s(value, (t, v) => visited(t, v) || success(v as any));
         return result.success ? undefined : result;
       },
     },
     {
-      tag: 'union',
       alternatives,
       match: match as any,
       show({ parenthesize, showChild }) {

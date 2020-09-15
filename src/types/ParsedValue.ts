@@ -1,4 +1,4 @@
-import { Result } from '../result';
+import { failure, Result } from '../result';
 import {
   RuntypeBase,
   Static,
@@ -36,6 +36,7 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
 ): ParsedValue<TUnderlying, TParsed> {
   assertRuntype(underlying);
   return create<ParsedValue<TUnderlying, TParsed>>(
+    'parsed',
     {
       validate: (value, _innerValidate, innerValidateToPlaceholder) => {
         return mapValidationPlaceholder<any, TParsed>(
@@ -50,22 +51,18 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
         if (config.test) {
           return internalTest(config.test, value);
         } else {
-          return {
-            success: false,
-            message: `${
-              config.name || `ParsedValue<${show(underlying)}>`
-            } does not support Runtype.test`,
-          };
+          return failure(
+            `${config.name || `ParsedValue<${show(underlying)}>`} does not support Runtype.test`,
+          );
         }
       },
       serialize(value, _internalSerialize, _internalSerializeToPlaceholder) {
         if (!config.serialize) {
-          return {
-            success: false,
-            message: `${
+          return failure(
+            `${
               config.name || `ParsedValue<${show(underlying)}>`
             } does not support Runtype.serialize`,
-          };
+          );
         }
         const testResult = config.test
           ? innerGuard(config.test, value, createGuardVisitedState())
@@ -85,7 +82,6 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
       },
     },
     {
-      tag: 'parsed',
       underlying,
       config,
 

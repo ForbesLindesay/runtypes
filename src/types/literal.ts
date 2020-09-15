@@ -1,3 +1,4 @@
+import { failure, success } from '../result';
 import { RuntypeBase, create, Codec } from '../runtype';
 import showValue from '../showValue';
 
@@ -21,17 +22,16 @@ export function isLiteralRuntype(runtype: RuntypeBase): runtype is Literal {
  */
 export function Literal<A extends LiteralValue>(valueBase: A): Literal<A> {
   return create<Literal<A>>(
+    'literal',
     value =>
       value === valueBase
-        ? { success: true, value }
-        : {
-            success: false,
-            message: `Expected literal ${showValue(valueBase)}, but was ${showValue(value)}${
+        ? success(value)
+        : failure(
+            `Expected literal ${showValue(valueBase)}, but was ${showValue(value)}${
               typeof value !== typeof valueBase ? ` (i.e. a ${typeof value})` : ``
             }`,
-          },
+          ),
     {
-      tag: 'literal',
       value: valueBase,
       show() {
         return showValue(valueBase);

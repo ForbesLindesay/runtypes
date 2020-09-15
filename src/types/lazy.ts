@@ -28,11 +28,11 @@ export function Lazy<TUnderlying extends RuntypeBase<unknown>>(
   const underlying = lazyValue(delayed);
 
   return create<Lazy<TUnderlying>>(
+    'lazy',
     (value, _innerValidate, innerValidateToPlaceholder) => {
       return innerValidateToPlaceholder(underlying(), value) as any;
     },
     {
-      tag: 'lazy',
       underlying,
       show({ showChild, needsParens }) {
         return showChild(underlying(), needsParens);

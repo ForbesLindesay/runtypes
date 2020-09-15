@@ -1,3 +1,30 @@
+import type { RuntypeBase } from './runtype';
+import show from './show';
+import showValue from './showValue';
+
+export function success<T>(value: T): Success<T> {
+  return { success: true, value };
+}
+
+export function failure(
+  message: string,
+  options: Omit<Failure, 'success' | 'message'> = {},
+): Failure {
+  return { success: false, message, ...options };
+}
+export function expected(
+  expected: RuntypeBase | string,
+  value: unknown,
+  options: Omit<Failure, 'success' | 'message'> = {},
+): Failure {
+  return failure(
+    `Expected ${typeof expected === 'string' ? expected : show(expected)}, but was ${showValue(
+      value,
+    )}`,
+    options,
+  );
+}
+
 /**
  * A successful validation result.
  */

@@ -1,4 +1,4 @@
-import { Failure, FullError } from '../result';
+import { expected, failure, Failure, FullError } from '../result';
 import {
   Static,
   create,
@@ -34,12 +34,10 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
 ): IsReadonly extends true ? ReadonlyArray<TElement> : Arr<TElement> {
   assertRuntype(element);
   const result = create<ReadonlyArray<TElement> | Arr<TElement>>(
+    'array',
     (xs, innerValidate) => {
       if (!Array.isArray(xs)) {
-        return {
-          success: false,
-          message: `Expected array, but was ${showValue(xs)}`,
-        };
+        return expected('an Array', xs);
       }
 
       return createValidationPlaceholder([...xs], placeholder => {
@@ -55,12 +53,12 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
               `The types of [${i}] are not compatible:`,
               validated.fullError || [validated.message],
             ]);
-            firstError = firstError || {
-              success: false,
-              message: validated.message,
-              key: validated.key ? `[${i}].${validated.key}` : `[${i}]`,
-              fullError: fullError,
-            };
+            firstError =
+              firstError ||
+              failure(validated.message, {
+                key: validated.key ? `[${i}].${validated.key}` : `[${i}]`,
+                fullError: fullError,
+              });
           } else {
             placeholder[i] = validated.value;
           }
@@ -69,7 +67,6 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
       });
     },
     {
-      tag: 'array',
       isReadonly,
       element,
       show({ showChild }) {

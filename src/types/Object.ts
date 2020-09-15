@@ -9,7 +9,7 @@ import {
 import { hasKey } from '../util';
 import show from '../show';
 import { Failure } from '..';
-import { FullError } from '../result';
+import { expected, failure, FullError } from '../result';
 import showValue from '../showValue';
 
 export type RecordFields = { readonly [_: string]: RuntypeBase<unknown> };
@@ -71,15 +71,13 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
 ): InternalRecord<O, Part, RO> {
   Object.values(fields).forEach(f => assertRuntype(f));
   const runtype: InternalRecord<O, Part, RO> = create<InternalRecord<O, Part, RO>>(
+    'object',
     (x, innerValidate) => {
-      if (x === null || x === undefined) {
-        return { success: false, message: `Expected ${show(runtype)}, but was ${x}` };
-      }
-      if (typeof x !== 'object') {
-        return { success: false, message: `Expected ${show(runtype)}, but was ${typeof x}` };
+      if (x === null || x === undefined || typeof x !== 'object') {
+        return expected(runtype, x);
       }
       if (Array.isArray(x)) {
-        return { success: false, message: `Expected ${show(runtype)}, but was an Array` };
+        return failure(`Expected ${show(runtype)}, but was an Array`);
       }
 
       return createValidationPlaceholder({} as any, (placeholder: any) => {
@@ -97,12 +95,12 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
                 `The types of property "${key}" are not compatible:`,
                 validated.fullError || [validated.message],
               ]);
-              firstError = firstError || {
-                success: false,
-                message: validated.message,
-                key: validated.key ? `${key}.${validated.key}` : key,
-                fullError: fullError,
-              };
+              firstError =
+                firstError ||
+                failure(validated.message, {
+                  key: validated.key ? `${key}.${validated.key}` : key,
+                  fullError: fullError,
+                });
             } else {
               placeholder[key] = validated.value;
             }
@@ -112,7 +110,6 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
       });
     },
     {
-      tag: 'object',
       isPartial,
       isReadonly,
       fields,

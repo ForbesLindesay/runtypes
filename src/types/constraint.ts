@@ -1,3 +1,4 @@
+import { failure, success } from '../result';
 import { RuntypeBase, Static, create, Codec, assertRuntype } from '../runtype';
 import show from '../show';
 import showValue from '../showValue';
@@ -40,6 +41,7 @@ export function Constraint<
   const runtype: Constraint<TUnderlying, TConstrained, TArgs> = create<
     Constraint<TUnderlying, TConstrained, TArgs>
   >(
+    'constraint',
     (value, innerValidate) => {
       const name = options && options.name;
       const validated = innerValidate(underlying, value);
@@ -54,16 +56,13 @@ export function Constraint<
           typeof result === 'string'
             ? result
             : `${showValue(value)} failed ${name || 'constraint'} check`;
-        return {
-          success: false,
-          message,
+        return failure(message, {
           fullError: [`Unable to assign ${showValue(value)} to ${show(runtype)}:`, [message]],
-        };
+        });
       }
-      return { success: true, value: validated.value as TConstrained };
+      return success(validated.value as TConstrained);
     },
     {
-      tag: 'constraint',
       underlying,
       constraint,
       name: options && options.name,

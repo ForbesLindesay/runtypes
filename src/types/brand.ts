@@ -20,11 +20,11 @@ export function isBrandRuntype(runtype: RuntypeBase): runtype is Brand<string, R
 export function Brand<B extends string, A extends RuntypeBase<unknown>>(brand: B, entity: A) {
   assertRuntype(entity);
   return create<Brand<B, A>>(
+    'brand',
     (value, _innerValidate, innerValidateToPlaceholder) => {
       return innerValidateToPlaceholder(entity, value) as any;
     },
     {
-      tag: 'brand',
       brand,
       entity,
       show({ showChild, needsParens }) {

@@ -1,3 +1,4 @@
+import { expected, success } from '../result';
 import { create, Codec } from '../runtype';
 import showValue from '../showValue';
 
@@ -16,18 +17,15 @@ export function Enum<TEnum extends { [key: string]: number | string }>(
     values.some(v => typeof v === 'number') ? values.filter(v => typeof v === 'number') : values,
   );
   return create<Enum<TEnum>>(
+    'enum',
     value => {
       if (enumValues.has(value as any)) {
-        return { success: true, value: value as any };
+        return success(value as any);
       } else {
-        return {
-          success: false,
-          message: `Expected ${name}, but was ${showValue(value)}`,
-        };
+        return expected(name, showValue(value));
       }
     },
     {
-      tag: 'enum',
       enumObject: e,
       show: () => name,
     },

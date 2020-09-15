@@ -3,6 +3,7 @@ import show from './show';
 import { ValidationError } from './errors';
 import { ParsedValue, ParsedValueConfig } from './types/ParsedValue';
 import showValue from './showValue';
+import { failure, success } from './result';
 
 export type InnerValidateHelper = <T>(runtype: RuntypeBase<T>, value: unknown) => Result<T>;
 declare const internalSymbol: unique symbol;
@@ -189,11 +190,14 @@ export interface Codec<TParsed> extends Runtype<TParsed> {
 export type Static<A extends RuntypeBase<any>> = A extends RuntypeBase<infer T> ? T : unknown;
 
 export function create<TConfig extends Codec<any>>(
+  tag: TConfig['tag'],
   internalImplementation:
     | InternalValidation<Static<TConfig>>
     | InternalValidation<Static<TConfig>>['validate'],
   config: Omit<
     TConfig,
+    | typeof internal
+    | 'tag'
     | 'assert'
     | 'check'
     | 'test'
@@ -210,11 +214,11 @@ export function create<TConfig extends Codec<any>>(
     | 'withGuard'
     | 'withBrand'
     | 'withParser'
-    | typeof internal
   >,
 ): TConfig {
   const A: Codec<Static<TConfig>> = {
     ...config,
+    tag,
     assert,
     parse,
     check: parse,
@@ -315,11 +319,11 @@ export type Cycle<T> = {
 
 function attemptMixin<T>(placeholder: any, value: T): Result<T> {
   if (placeholder === value) {
-    return { success: true, value };
+    return success(value);
   }
   if (Array.isArray(placeholder) && Array.isArray(value)) {
     placeholder.splice(0, placeholder.length, ...value);
-    return { success: true, value: placeholder as any };
+    return success(placeholder as any);
   }
   if (
     placeholder &&
@@ -330,26 +334,22 @@ function attemptMixin<T>(placeholder: any, value: T): Result<T> {
     !Array.isArray(value)
   ) {
     Object.assign(placeholder, value);
-    return { success: true, value: placeholder };
+    return success(placeholder);
   }
-  return {
-    success: false,
-    message: `Cannot convert a value of type "${
+  return failure(
+    `Cannot convert a value of type "${
       Array.isArray(placeholder) ? 'Array' : typeof placeholder
     }" into a value of type "${
       value === null ? 'null' : Array.isArray(value) ? 'Array' : typeof value
     }" when it contains cycles.`,
-  };
+  );
 }
 
 export function createValidationPlaceholder<T>(
   placeholder: T,
   fn: (placeholder: T) => Failure | undefined,
 ): Cycle<T> {
-  return innerMapValidationPlaceholder(
-    placeholder,
-    () => fn(placeholder) || { success: true, value: placeholder },
-  );
+  return innerMapValidationPlaceholder(placeholder, () => fn(placeholder) || success(placeholder));
 }
 
 export function mapValidationPlaceholder<T, S>(
@@ -393,7 +393,7 @@ function innerMapValidationPlaceholder(
         hasCycle = true;
         return cache;
       }
-      cache = { success: true, value: placeholder };
+      cache = success(placeholder);
 
       const sourceResult = populate();
       const result = sourceResult.success && fn ? fn(sourceResult.value) : sourceResult;
@@ -537,8 +537,8 @@ export function innerGuard(
   }
   let result = validator.validate(
     value,
-    (t, v) => innerGuard(t, v, $visited) || { success: true, value: v as any },
-    (t, v) => innerGuard(t, v, $visited) || { success: true, value: v as any },
+    (t, v) => innerGuard(t, v, $visited) || success(v as any),
+    (t, v) => innerGuard(t, v, $visited) || success(v as any),
   );
   if (result.cycle) result = result.unwrap();
   if (result.success) return undefined;

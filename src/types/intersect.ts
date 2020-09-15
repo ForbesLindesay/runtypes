@@ -1,3 +1,4 @@
+import { failure, success } from '../result';
 import {
   Static,
   create,
@@ -33,6 +34,7 @@ export function Intersect<
 >(...intersectees: TIntersectees): Intersect<TIntersectees> {
   intersectees.forEach(int => assertRuntype(int));
   return create<Intersect<TIntersectees>>(
+    'intersect',
     (value, innerValidate) => {
       if (Array.isArray(value)) {
         return createValidationPlaceholder<any>([...value], placeholder => {
@@ -42,12 +44,11 @@ export function Intersect<
               return validated;
             }
             if (!Array.isArray(validated.value)) {
-              return {
-                success: false,
-                message: `The validator ${show(
+              return failure(
+                `The validator ${show(
                   targetType,
                 )} attempted to convert the type of this value from an array to something else. That conversion is not valid as the child of an intersect`,
-              };
+              );
             }
             placeholder.splice(0, placeholder.length, ...validated.value);
           }
@@ -60,12 +61,11 @@ export function Intersect<
               return validated;
             }
             if (!(validated.value && typeof validated.value === 'object')) {
-              return {
-                success: false,
-                message: `The validator ${show(
+              return failure(
+                `The validator ${show(
                   targetType,
                 )} attempted to convert the type of this value from an object to something else. That conversion is not valid as the child of an intersect`,
-              };
+              );
             }
             Object.assign(placeholder, validated.value);
           }
@@ -79,10 +79,9 @@ export function Intersect<
         }
         result = validated.value;
       }
-      return { success: true, value: result };
+      return success(result);
     },
     {
-      tag: 'intersect',
       intersectees,
       show({ parenthesize, showChild }) {
         return parenthesize(`${intersectees.map(v => showChild(v, true)).join(' & ')}`);

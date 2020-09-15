@@ -1,4 +1,4 @@
-import { Failure, FullError } from '../result';
+import { expected, failure, Failure, FullError } from '../result';
 import { create, RuntypeBase, Codec, createValidationPlaceholder, assertRuntype } from '../runtype';
 import show from '../show';
 import showValue from '../showValue';
@@ -28,22 +28,18 @@ export function Tuple<
 >(...components: T): Tuple<T> {
   components.forEach(c => assertRuntype(c));
   const result = create<Tuple<T>>(
+    'tuple',
     (x, innerValidate) => {
       const validated = innerValidate(Arr(Unknown), x);
 
       if (!validated.success) {
-        return {
-          success: false,
-          message: `Expected tuple to be an array but was ${showValue(x)}`,
+        return expected(`tuple to be an array`, x, {
           key: validated.key,
-        };
+        });
       }
 
       if (validated.value.length !== components.length) {
-        return {
-          success: false,
-          message: `Expected an array of length ${components.length}, but was ${validated.value.length}`,
-        };
+        return expected(`an array of length ${components.length}`, validated.value.length);
       }
 
       return createValidationPlaceholder(validated.value as any, placeholder => {
@@ -60,12 +56,12 @@ export function Tuple<
               `The types of [${i}] are not compatible:`,
               validatedComponent.fullError || [validatedComponent.message],
             ]);
-            firstError = firstError || {
-              success: false,
-              message: validatedComponent.message,
-              key: validatedComponent.key ? `[${i}].${validatedComponent.key}` : `[${i}]`,
-              fullError: fullError,
-            };
+            firstError =
+              firstError ||
+              failure(validatedComponent.message, {
+                key: validatedComponent.key ? `[${i}].${validatedComponent.key}` : `[${i}]`,
+                fullError: fullError,
+              });
           } else {
             placeholder[i] = validatedComponent.value;
           }
@@ -74,7 +70,6 @@ export function Tuple<
       });
     },
     {
-      tag: 'tuple',
       components,
       show({ showChild }) {
         return `[${(components as readonly RuntypeBase<unknown>[])

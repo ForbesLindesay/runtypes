@@ -1,5 +1,5 @@
+import { expected } from '../result';
 import { Codec, create } from '../runtype';
-import showValue from '../showValue';
 
 export interface Never extends Codec<never> {
   readonly tag: 'never';
@@ -8,10 +8,4 @@ export interface Never extends Codec<never> {
 /**
  * Validates nothing (unknown fails).
  */
-export const Never: Never = create(
-  value => ({
-    success: false,
-    message: `Expected nothing, but was ${showValue(value)}`,
-  }),
-  { tag: 'never' },
-) as any;
+export const Never: Never = create('never', value => expected('nothing', value), {}) as any;

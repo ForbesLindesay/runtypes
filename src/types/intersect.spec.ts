@@ -1,11 +1,12 @@
 import { Intersect, ParsedValue, Object, String, Tuple, Unknown } from '..';
+import { success } from '../result';
 
 // This is a super odd/unhelpful type that just JSON.stringify's whatever you
 // attempt to parse
 const ConvertIntoJSON = Unknown.withParser({
   name: 'ConvertIntoJSON',
   parse(value) {
-    return { success: true, value: JSON.stringify(value) };
+    return success(JSON.stringify(value));
   },
 });
 
@@ -14,7 +15,7 @@ test('Intersect can handle object keys being converted', () => {
     name: 'URLString',
     parse(value) {
       try {
-        return { success: true, value: new URL(value) };
+        return success(new URL(value));
       } catch (ex) {
         return { success: false, message: `Expected a valid URL but got '${value}'` };
       }
@@ -70,7 +71,7 @@ test('Intersect can handle tuple entries being converted', () => {
     name: 'URLString',
     parse(value) {
       try {
-        return { success: true, value: new URL(value) };
+        return success(new URL(value));
       } catch (ex) {
         return { success: false, message: `Expected a valid URL but got '${value}'` };
       }
