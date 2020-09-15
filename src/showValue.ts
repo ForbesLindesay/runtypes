@@ -10,10 +10,6 @@ export default function showValue(
       return `${value}`;
     case 'string':
       return JSON.stringify(value);
-    case 'function':
-    case 'symbol':
-    case 'undefined':
-      return typeof value;
     case 'object':
       if (value === null) {
         return 'null';
@@ -56,6 +52,11 @@ export default function showValue(
         result += '}';
         return result;
       }
+    case 'function':
+    case 'symbol':
+    case 'undefined':
+    default:
+      return typeof value;
   }
 }
 export function showValueNonString(value: unknown): string {
