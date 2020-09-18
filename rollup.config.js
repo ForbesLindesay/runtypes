@@ -1,5 +1,6 @@
 import { sizeSnapshot } from 'rollup-plugin-size-snapshot';
 import typescript from 'rollup-plugin-typescript2';
+import { terser } from 'rollup-plugin-terser';
 import pkg from './package.json';
 
 export default {
@@ -25,6 +26,16 @@ export default {
     sizeSnapshot(),
     typescript({
       typescript: require('typescript'),
+    }),
+    terser({
+      compress: {
+        ecma: '2020',
+        keep_fnames: true,
+        passes: 10,
+        unsafe_arrows: true,
+        unsafe_methods: true,
+      },
+      mangle: false,
     }),
   ],
 };

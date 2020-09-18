@@ -9,7 +9,7 @@ import {
   OpaqueVisitedState,
   assertRuntype,
 } from '../runtype';
-import show from '../show';
+import show, { parenthesize } from '../show';
 import { LiteralValue, isLiteralRuntype } from './literal';
 import { lazyValue, isLazyRuntype } from './lazy';
 import { isObjectRuntype } from './Object';
@@ -228,8 +228,8 @@ export function Union<
     {
       alternatives,
       match: match as any,
-      show({ parenthesize, showChild }) {
-        return parenthesize(`${alternatives.map(v => showChild(v, true)).join(' | ')}`);
+      show(needsParens) {
+        return parenthesize(`${alternatives.map(v => show(v, true)).join(' | ')}`, needsParens);
       },
     },
   );

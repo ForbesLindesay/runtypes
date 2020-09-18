@@ -117,8 +117,8 @@ function RecordInternal<K extends KeyRuntypeBase, V extends RuntypeBase<unknown>
     {
       key,
       value,
-      show({ showChild }) {
-        return `{ [_: ${showChild(key, false)}]: ${showChild(value, false)} }`;
+      show() {
+        return `{ [_: ${show(key, false)}]: ${show(value, false)} }`;
       },
     },
   );

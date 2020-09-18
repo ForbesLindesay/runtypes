@@ -1,4 +1,5 @@
 import { RuntypeBase, Static, create, Codec, assertRuntype } from '../runtype';
+import show from '../show';
 
 export const RuntypeName = Symbol('RuntypeName');
 
@@ -26,8 +27,8 @@ export function Brand<B extends string, A extends RuntypeBase<unknown>>(brand: B
     {
       brand,
       entity,
-      show({ showChild, needsParens }) {
-        return showChild(entity, needsParens);
+      show(needsParens) {
+        return show(entity, needsParens);
       },
     },
   );

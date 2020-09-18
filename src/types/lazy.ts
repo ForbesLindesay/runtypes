@@ -1,4 +1,5 @@
 import { create, RuntypeBase, Codec, Static } from '../runtype';
+import show from '../show';
 
 export interface Lazy<TUnderlying extends RuntypeBase<unknown>> extends Codec<Static<TUnderlying>> {
   readonly tag: 'lazy';
@@ -30,8 +31,8 @@ export function Lazy<TUnderlying extends RuntypeBase<unknown>>(
       innerValidateToPlaceholder(underlying(), value) as any,
     {
       underlying,
-      show({ showChild, needsParens }) {
-        return showChild(underlying(), needsParens);
+      show(needsParens) {
+        return show(underlying(), needsParens);
       },
     },
   );

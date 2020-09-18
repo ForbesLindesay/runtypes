@@ -23,6 +23,7 @@
     "prettier": "^2.1.1",
     "rollup": "^2.26.11",
     "rollup-plugin-size-snapshot": "^0.12.0",
+    "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.27.2",
     "ts-jest": "^24.1.0",
     "type-assertions": "^1.1.0",

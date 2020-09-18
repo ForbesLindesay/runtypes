@@ -91,11 +91,7 @@ export interface RuntypeBase<TParsed = unknown> {
    */
   validate(x: any): Result<TParsed>;
 
-  show?: (ctx: {
-    needsParens: boolean;
-    parenthesize: (str: string) => string;
-    showChild: (rt: RuntypeBase, needsParens: boolean) => string;
-  }) => string;
+  show?: (needsParens: boolean) => string;
 
   [internal]: InternalValidation<TParsed>;
 }

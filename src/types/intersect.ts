@@ -7,7 +7,7 @@ import {
   createValidationPlaceholder,
   assertRuntype,
 } from '../runtype';
-import show from '../show';
+import show, { parenthesize } from '../show';
 
 // We use the fact that a union of functions is effectively an intersection of parameters
 // e.g. to safely call (({x: 1}) => void | ({y: 2}) => void) you must pass {x: 1, y: 2}
@@ -83,8 +83,8 @@ export function Intersect<
     },
     {
       intersectees,
-      show({ parenthesize, showChild }) {
-        return parenthesize(`${intersectees.map(v => showChild(v, true)).join(' & ')}`);
+      show(needsParens) {
+        return parenthesize(`${intersectees.map(v => show(v, true)).join(' & ')}`, needsParens);
       },
     },
   );

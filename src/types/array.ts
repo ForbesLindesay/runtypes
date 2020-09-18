@@ -14,6 +14,7 @@ import {
   createValidationPlaceholder,
   assertRuntype,
 } from '../runtype';
+import show from '../show';
 
 export interface ReadonlyArray<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
   extends Codec<readonly Static<E>[]> {
@@ -71,8 +72,8 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
     {
       isReadonly,
       element,
-      show({ showChild }) {
-        return `${isReadonly ? 'readonly ' : ''}${showChild(element, true)}[]`;
+      show() {
+        return `${isReadonly ? 'readonly ' : ''}${show(element, true)}[]`;
       },
     },
   );

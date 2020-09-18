@@ -113,13 +113,13 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
       asReadonly,
       pick,
       omit,
-      show({ showChild }) {
+      show() {
         const keys = Object.keys(fields);
         return keys.length
           ? `{ ${keys
               .map(
                 k =>
-                  `${isReadonly ? 'readonly ' : ''}${k}${isPartial ? '?' : ''}: ${showChild(
+                  `${isReadonly ? 'readonly ' : ''}${k}${isPartial ? '?' : ''}: ${show(
                     fields[k],
                     false,
                   )};`,

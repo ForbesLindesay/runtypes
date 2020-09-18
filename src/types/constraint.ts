@@ -1,5 +1,6 @@
 import { failure, success, unableToAssign } from '../result';
 import { RuntypeBase, Static, create, Codec, assertRuntype } from '../runtype';
+import show from '../show';
 import showValue from '../showValue';
 import { Unknown } from './unknown';
 
@@ -67,8 +68,8 @@ export function Constraint<
       name: options && options.name,
       args: options && options.args,
 
-      show({ needsParens, showChild }) {
-        return (options && options.name) || `WithConstraint<${showChild(underlying, needsParens)}>`;
+      show(needsParens) {
+        return (options && options.name) || `WithConstraint<${show(underlying, needsParens)}>`;
       },
     },
   );

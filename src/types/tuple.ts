@@ -7,6 +7,7 @@ import {
   unableToAssign,
 } from '../result';
 import { create, RuntypeBase, Codec, createValidationPlaceholder, assertRuntype } from '../runtype';
+import show from '../show';
 
 export type StaticTuple<TElements extends readonly RuntypeBase<unknown>[]> = {
   [key in keyof TElements]: TElements[key] extends RuntypeBase<infer E> ? E : unknown;
@@ -67,9 +68,9 @@ export function Tuple<
     },
     {
       components,
-      show({ showChild }) {
+      show() {
         return `[${(components as readonly RuntypeBase<unknown>[])
-          .map(e => showChild(e, false))
+          .map(e => show(e, false))
           .join(', ')}]`;
       },
     },

@@ -81,8 +81,8 @@ export function ParsedValue<TUnderlying extends RuntypeBase<unknown>, TParsed>(
       underlying,
       config,
 
-      show({ showChild }) {
-        return config.name || `ParsedValue<${showChild(underlying, false)}>`;
+      show() {
+        return config.name || `ParsedValue<${show(underlying, false)}>`;
       },
     },
   );
