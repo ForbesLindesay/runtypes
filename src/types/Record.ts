@@ -69,8 +69,7 @@ function RecordInternal<K extends KeyRuntypeBase, V extends RuntypeBase<unknown>
   key: K,
   value: V,
 ): Record<K, V> {
-  assertRuntype(key);
-  assertRuntype(value);
+  assertRuntype(key, value);
   const expectedBaseType = lazyValue(() => getExpectedBaseType(key));
   const runtype: Record<K, V> = create<Record<K, V>>(
     'record',

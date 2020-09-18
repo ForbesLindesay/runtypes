@@ -68,7 +68,7 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
   isPartial: Part,
   isReadonly: RO,
 ): InternalRecord<O, Part, RO> {
-  Object.values(fields).forEach(f => assertRuntype(f));
+  assertRuntype(...Object.values(fields));
   const runtype: InternalRecord<O, Part, RO> = create<InternalRecord<O, Part, RO>>(
     'object',
     (x, innerValidate) => {

@@ -9,9 +9,11 @@ export type InnerValidateHelper = <T>(runtype: RuntypeBase<T>, value: unknown) =
 declare const internalSymbol: unique symbol;
 const internal: typeof internalSymbol = ('__internal_runtype_methods__' as unknown) as typeof internalSymbol;
 
-export function assertRuntype(value: RuntypeBase) {
-  if (!value || !value[internal]) {
-    throw new Error(`Expected Runtype but got ${showValue(value)}`);
+export function assertRuntype(...values: RuntypeBase[]) {
+  for (const value of values) {
+    if (!value || !value[internal]) {
+      throw new Error(`Expected Runtype but got ${showValue(value)}`);
+    }
   }
 }
 export function isRuntype(value: unknown): value is RuntypeBase {

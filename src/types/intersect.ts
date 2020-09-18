@@ -32,7 +32,7 @@ export interface Intersect<
 export function Intersect<
   TIntersectees extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
 >(...intersectees: TIntersectees): Intersect<TIntersectees> {
-  intersectees.forEach(int => assertRuntype(int));
+  assertRuntype(...intersectees);
   return create<Intersect<TIntersectees>>(
     'intersect',
     (value, innerValidate) => {

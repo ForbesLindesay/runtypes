@@ -30,7 +30,7 @@ export function isTupleRuntype(runtype: RuntypeBase): runtype is Tuple<readonly 
 export function Tuple<
   T extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]] | readonly []
 >(...components: T): Tuple<T> {
-  components.forEach(c => assertRuntype(c));
+  assertRuntype(...components);
   const result = create<Tuple<T>>(
     'tuple',
     (x, innerValidate) => {

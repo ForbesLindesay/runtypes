@@ -1,5 +1,5 @@
 import { String, Number, Record } from '..';
-import { assertRuntype, RuntypeBase } from '../runtype';
+import { RuntypeBase } from '../runtype';
 
 export interface StringDictionary<V extends RuntypeBase> extends Record<String, V> {}
 
@@ -17,6 +17,5 @@ export function Dictionary<V extends RuntypeBase>(
   value: V,
   key: 'number' | 'string' = 'string',
 ): Record<String | Number, V> {
-  assertRuntype(value);
   return Record(key === 'number' ? Number : String, value);
 }

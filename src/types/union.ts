@@ -69,7 +69,7 @@ function resolveUnderlyingType(runtype: RuntypeBase, mode: 'p' | 's' | 't'): Run
 export function Union<
   TAlternatives extends readonly [RuntypeBase<unknown>, ...RuntypeBase<unknown>[]]
 >(...alternatives: TAlternatives): Union<TAlternatives> {
-  alternatives.forEach(a => assertRuntype(a));
+  assertRuntype(...alternatives);
   type TResult = StaticUnion<TAlternatives>;
   type InnerValidate = (x: any, innerValidate: InnerValidateHelper) => Result<TResult>;
   function validateWithKey(

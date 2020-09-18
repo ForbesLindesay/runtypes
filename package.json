@@ -22,6 +22,7 @@
     "jest": "24.9.0",
     "prettier": "^2.1.1",
     "rollup": "^2.26.11",
+    "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-size-snapshot": "^0.12.0",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.27.2",
