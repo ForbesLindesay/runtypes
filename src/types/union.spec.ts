@@ -25,11 +25,11 @@ describe('union', () => {
       expect(Shape.safeParse({ kind: 'square', size: new Date() })).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign {kind: \\"square\\", size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }:",
+            "Unable to assign {kind: \\"square\\", size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }",
             Array [
-              "Unable to assign {kind: \\"square\\", size: {}} to { kind: \\"square\\"; size: number; }:",
+              "Unable to assign {kind: \\"square\\", size: {}} to { kind: \\"square\\"; size: number; }",
               Array [
-                "The types of property \\"size\\" are not compatible:",
+                "The types of \\"size\\" are not compatible",
                 Array [
                   "Expected number, but was {}",
                 ],
@@ -45,17 +45,17 @@ describe('union', () => {
       expect(Shape.safeParse({ kind: 'rectangle', size: new Date() })).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign {kind: \\"rectangle\\", size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }:",
+            "Unable to assign {kind: \\"rectangle\\", size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }",
             Array [
-              "Unable to assign {kind: \\"rectangle\\", size: {}} to { kind: \\"rectangle\\"; width: number; height: number; }:",
+              "Unable to assign {kind: \\"rectangle\\", size: {}} to { kind: \\"rectangle\\"; width: number; height: number; }",
               Array [
-                "The types of property \\"width\\" are not compatible:",
+                "The types of \\"width\\" are not compatible",
                 Array [
                   "Expected number, but was undefined",
                 ],
               ],
               Array [
-                "The types of property \\"height\\" are not compatible:",
+                "The types of \\"height\\" are not compatible",
                 Array [
                   "Expected number, but was undefined",
                 ],
@@ -71,11 +71,11 @@ describe('union', () => {
       expect(Shape.safeParse({ kind: 'circle', size: new Date() })).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign {kind: \\"circle\\", size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }:",
+            "Unable to assign {kind: \\"circle\\", size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }",
             Array [
-              "Unable to assign {kind: \\"circle\\", size: {}} to { kind: \\"circle\\"; radius: number; }:",
+              "Unable to assign {kind: \\"circle\\", size: {}} to { kind: \\"circle\\"; radius: number; }",
               Array [
-                "The types of property \\"radius\\" are not compatible:",
+                "The types of \\"radius\\" are not compatible",
                 Array [
                   "Expected number, but was undefined",
                 ],
@@ -91,9 +91,9 @@ describe('union', () => {
       expect(Shape.safeParse({ kind: 'other', size: new Date() })).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign {kind: \\"other\\", size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }:",
+            "Unable to assign {kind: \\"other\\", size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }",
             Array [
-              "The types of [0] are not compatible:",
+              "The types of \\"kind\\" are not compatible",
               Array [
                 "Expected 'square' | 'rectangle' | 'circle', but was \\"other\\"",
               ],
@@ -107,7 +107,7 @@ describe('union', () => {
 
       expect(Shape.safeParse(42)).toMatchInlineSnapshot(`
         Object {
-          "message": "Expected { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }, but was number",
+          "message": "Expected { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }, but was 42",
           "success": false,
         }
       `);
@@ -122,9 +122,9 @@ describe('union', () => {
       expect(Shape.safeParse({ kind: { v: 'circle' }, size: new Date() })).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign {kind: {v: \\"circle\\"}, size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }:",
+            "Unable to assign {kind: {v: \\"circle\\"}, size: {}} to { kind: \\"square\\"; size: number; } | { kind: \\"rectangle\\"; width: number; height: number; } | { kind: \\"circle\\"; radius: number; }",
             Array [
-              "The types of [0] are not compatible:",
+              "The types of \\"kind\\" are not compatible",
               Array [
                 "Expected 'square' | 'rectangle' | 'circle', but was {v: \\"circle\\"}",
               ],
@@ -166,15 +166,15 @@ describe('union', () => {
       expect(Shape.safeParse(['square', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [\\"square\\", {size: {}}] to [\\"square\\", { size: number; }] | [\\"rectangle\\", { width: number; height: number; }] | [\\"circle\\", { radius: number; }]:",
+            "Unable to assign [\\"square\\", {size: {}}] to [\\"square\\", { size: number; }] | [\\"rectangle\\", { width: number; height: number; }] | [\\"circle\\", { radius: number; }]",
             Array [
-              "Unable to assign [\\"square\\", {size: {}}] to [\\"square\\", { size: number; }]:",
+              "Unable to assign [\\"square\\", {size: {}}] to [\\"square\\", { size: number; }]",
               Array [
-                "The types of [1] are not compatible:",
+                "The types of [1] are not compatible",
                 Array [
-                  "Unable to assign {size: {}} to { size: number; }:",
+                  "Unable to assign {size: {}} to { size: number; }",
                   Array [
-                    "The types of property \\"size\\" are not compatible:",
+                    "The types of \\"size\\" are not compatible",
                     Array [
                       "Expected number, but was {}",
                     ],
@@ -192,21 +192,21 @@ describe('union', () => {
       expect(Shape.safeParse(['rectangle', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [\\"rectangle\\", {size: {}}] to [\\"square\\", { size: number; }] | [\\"rectangle\\", { width: number; height: number; }] | [\\"circle\\", { radius: number; }]:",
+            "Unable to assign [\\"rectangle\\", {size: {}}] to [\\"square\\", { size: number; }] | [\\"rectangle\\", { width: number; height: number; }] | [\\"circle\\", { radius: number; }]",
             Array [
-              "Unable to assign [\\"rectangle\\", {size: {}}] to [\\"rectangle\\", { width: number; height: number; }]:",
+              "Unable to assign [\\"rectangle\\", {size: {}}] to [\\"rectangle\\", { width: number; height: number; }]",
               Array [
-                "The types of [1] are not compatible:",
+                "The types of [1] are not compatible",
                 Array [
-                  "Unable to assign {size: {}} to { width: number; height: number; }:",
+                  "Unable to assign {size: {}} to { width: number; height: number; }",
                   Array [
-                    "The types of property \\"width\\" are not compatible:",
+                    "The types of \\"width\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
                   ],
                   Array [
-                    "The types of property \\"height\\" are not compatible:",
+                    "The types of \\"height\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -224,15 +224,15 @@ describe('union', () => {
       expect(Shape.safeParse(['circle', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [\\"circle\\", {size: {}}] to [\\"square\\", { size: number; }] | [\\"rectangle\\", { width: number; height: number; }] | [\\"circle\\", { radius: number; }]:",
+            "Unable to assign [\\"circle\\", {size: {}}] to [\\"square\\", { size: number; }] | [\\"rectangle\\", { width: number; height: number; }] | [\\"circle\\", { radius: number; }]",
             Array [
-              "Unable to assign [\\"circle\\", {size: {}}] to [\\"circle\\", { radius: number; }]:",
+              "Unable to assign [\\"circle\\", {size: {}}] to [\\"circle\\", { radius: number; }]",
               Array [
-                "The types of [1] are not compatible:",
+                "The types of [1] are not compatible",
                 Array [
-                  "Unable to assign {size: {}} to { radius: number; }:",
+                  "Unable to assign {size: {}} to { radius: number; }",
                   Array [
-                    "The types of property \\"radius\\" are not compatible:",
+                    "The types of \\"radius\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -250,9 +250,9 @@ describe('union', () => {
       expect(Shape.safeParse(['other', { size: new Date() }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [\\"other\\", {size: {}}] to [\\"square\\", { size: number; }] | [\\"rectangle\\", { width: number; height: number; }] | [\\"circle\\", { radius: number; }]:",
+            "Unable to assign [\\"other\\", {size: {}}] to [\\"square\\", { size: number; }] | [\\"rectangle\\", { width: number; height: number; }] | [\\"circle\\", { radius: number; }]",
             Array [
-              "The types of [0] are not compatible:",
+              "The types of [0] are not compatible",
               Array [
                 "Expected 'square' | 'rectangle' | 'circle', but was \\"other\\"",
               ],
@@ -306,21 +306,21 @@ describe('union', () => {
       expect(Shape.safeParse([2, { size: 10 }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [2, {size: 10}] to [1, { size: number; }] | [2, { width: number; height: number; }]:",
+            "Unable to assign [2, {size: 10}] to [1, { size: number; }] | [2, { width: number; height: number; }]",
             Array [
-              "Unable to assign [2, {size: 10}] to [2, { width: number; height: number; }]:",
+              "Unable to assign [2, {size: 10}] to [2, { width: number; height: number; }]",
               Array [
-                "The types of [1] are not compatible:",
+                "The types of [1] are not compatible",
                 Array [
-                  "Unable to assign {size: 10} to { width: number; height: number; }:",
+                  "Unable to assign {size: 10} to { width: number; height: number; }",
                   Array [
-                    "The types of property \\"width\\" are not compatible:",
+                    "The types of \\"width\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
                   ],
                   Array [
-                    "The types of property \\"height\\" are not compatible:",
+                    "The types of \\"height\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -351,9 +351,9 @@ describe('union', () => {
       expect(Shape.safeParse([3, { size: 10 }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [3, {size: 10}] to [1, { size: number; }] | [2, { width: number; height: number; }]:",
+            "Unable to assign [3, {size: 10}] to [1, { size: number; }] | [2, { width: number; height: number; }]",
             Array [
-              "The types of [0] are not compatible:",
+              "The types of [0] are not compatible",
               Array [
                 "Expected 1 | 2, but was 3",
               ],
@@ -385,13 +385,13 @@ describe('union', () => {
       `);
 
       expect(() => extract([2, { size: 20 } as any])).toThrowErrorMatchingInlineSnapshot(`
-"Unable to assign [2, {size: 20}] to [1, { size: number; }] | [2, { width: number; height: number; }]:
-  Unable to assign [2, {size: 20}] to [2, { width: number; height: number; }]:
-    The types of [1] are not compatible:
-      Unable to assign {size: 20} to { width: number; height: number; }:
-        The types of property \\"width\\" are not compatible:
+"Unable to assign [2, {size: 20}] to [1, { size: number; }] | [2, { width: number; height: number; }]
+  Unable to assign [2, {size: 20}] to [2, { width: number; height: number; }]
+    The types of [1] are not compatible
+      Unable to assign {size: 20} to { width: number; height: number; }
+        The types of \\"width\\" are not compatible
           Expected number, but was undefined
-        The types of property \\"height\\" are not compatible:
+        The types of \\"height\\" are not compatible
           Expected number, but was undefined"
 `);
     });
@@ -419,21 +419,21 @@ describe('union', () => {
       expect(Shape.safeParse([2, { size: 10 }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [2, {size: 10}] to [1, { size: number; }] | [2, { width: number; height: number; }]:",
+            "Unable to assign [2, {size: 10}] to [1, { size: number; }] | [2, { width: number; height: number; }]",
             Array [
-              "Unable to assign [2, {size: 10}] to [2, { width: number; height: number; }]:",
+              "Unable to assign [2, {size: 10}] to [2, { width: number; height: number; }]",
               Array [
-                "The types of [1] are not compatible:",
+                "The types of [1] are not compatible",
                 Array [
-                  "Unable to assign {size: 10} to { width: number; height: number; }:",
+                  "Unable to assign {size: 10} to { width: number; height: number; }",
                   Array [
-                    "The types of property \\"width\\" are not compatible:",
+                    "The types of \\"width\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
                   ],
                   Array [
-                    "The types of property \\"height\\" are not compatible:",
+                    "The types of \\"height\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -464,9 +464,9 @@ describe('union', () => {
       expect(Shape.safeParse([3, { size: 10 }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [3, {size: 10}] to [1, { size: number; }] | [2, { width: number; height: number; }]:",
+            "Unable to assign [3, {size: 10}] to [1, { size: number; }] | [2, { width: number; height: number; }]",
             Array [
-              "The types of [0] are not compatible:",
+              "The types of [0] are not compatible",
               Array [
                 "Expected 1 | 2, but was 3",
               ],
@@ -504,21 +504,21 @@ describe('union', () => {
       expect(Shape.safeParse([2, { size: 10 }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [2, {size: 10}] to [1, { size: number; }] | WithConstraint<[2, { width: number; height: number; }]>:",
+            "Unable to assign [2, {size: 10}] to [1, { size: number; }] | WithConstraint<[2, { width: number; height: number; }]>",
             Array [
-              "Unable to assign [2, {size: 10}] to [2, { width: number; height: number; }]:",
+              "Unable to assign [2, {size: 10}] to [2, { width: number; height: number; }]",
               Array [
-                "The types of [1] are not compatible:",
+                "The types of [1] are not compatible",
                 Array [
-                  "Unable to assign {size: 10} to { width: number; height: number; }:",
+                  "Unable to assign {size: 10} to { width: number; height: number; }",
                   Array [
-                    "The types of property \\"width\\" are not compatible:",
+                    "The types of \\"width\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
                   ],
                   Array [
-                    "The types of property \\"height\\" are not compatible:",
+                    "The types of \\"height\\" are not compatible",
                     Array [
                       "Expected number, but was undefined",
                     ],
@@ -549,9 +549,9 @@ describe('union', () => {
       expect(Shape.safeParse([3, { size: 10 }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [3, {size: 10}] to [1, { size: number; }] | WithConstraint<[2, { width: number; height: number; }]>:",
+            "Unable to assign [3, {size: 10}] to [1, { size: number; }] | WithConstraint<[2, { width: number; height: number; }]>",
             Array [
-              "The types of [0] are not compatible:",
+              "The types of [0] are not compatible",
               Array [
                 "Expected 1 | 2, but was 3",
               ],
@@ -566,9 +566,9 @@ describe('union', () => {
       expect(Shape.safeParse([2, { width: 0, height: 0 }])).toMatchInlineSnapshot(`
         Object {
           "fullError": Array [
-            "Unable to assign [2, {width: 0, height: 0}] to [1, { size: number; }] | WithConstraint<[2, { width: number; height: number; }]>:",
+            "Unable to assign [2, {width: 0, height: 0}] to [1, { size: number; }] | WithConstraint<[2, { width: number; height: number; }]>",
             Array [
-              "Unable to assign [2, {width: 0, height: 0}] to WithConstraint<[2, { width: number; height: number; }]>:",
+              "Unable to assign [2, {width: 0, height: 0}] to WithConstraint<[2, { width: number; height: number; }]>",
               Array [
                 "Cannot have both width and height be 0",
               ],

@@ -51,7 +51,7 @@ test('NumberRecord', () => {
   `);
   expect(dictionary.safeParse({ foo: record, bar: record })).toMatchInlineSnapshot(`
     Object {
-      "message": "Expected record key to be a number, but was 'foo'",
+      "message": "Expected record key to be a number, but was \\"foo\\"",
       "success": false,
     }
   `);

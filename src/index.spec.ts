@@ -429,7 +429,7 @@ describe('check errors', () => {
     assertThrows(
       1,
       Record(String, ObjectType({ name: String })),
-      'Expected { [_: string]: { name: string; } }, but was number',
+      'Expected { [_: string]: { name: string; } }, but was 1',
     );
   });
 
@@ -580,7 +580,7 @@ describe('check errors', () => {
   });
 
   it('union', () => {
-    assertThrows(false, Union(Number, String), 'Expected number | string, but was boolean');
+    assertThrows(false, Union(Number, String), 'Expected number | string, but was false');
   });
 });
 

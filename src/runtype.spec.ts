@@ -21,8 +21,8 @@ test('Runtype.assert', () => {
     `"Expected string, but was 42"`,
   );
   expect(() => Object({ value: String }).assert({ value: 42 })).toThrowErrorMatchingInlineSnapshot(`
-"Unable to assign {value: 42} to { value: string; }:
-  The types of property \\"value\\" are not compatible:
+"Unable to assign {value: 42} to { value: string; }
+  The types of \\"value\\" are not compatible
     Expected string, but was 42"
 `);
 });

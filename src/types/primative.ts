@@ -31,7 +31,7 @@ function createPrimative<
     value =>
       typeof value === type
         ? success<TValue>(value)
-        : failure(`Expected boolean, but was ${showValueNonString(value)}`),
+        : failure(`Expected ${type}, but was ${showValueNonString(value)}`),
     {},
   );
 }

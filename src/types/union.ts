@@ -97,7 +97,7 @@ export function Union<
           Array.from(types.keys())
             .map(v => (typeof v === 'string' ? `'${v}'` : v))
             .join(' | '),
-          value,
+          value[tag],
           {
             key: tag === 0 ? `[0]` : tag,
           },

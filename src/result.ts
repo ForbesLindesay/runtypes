@@ -43,7 +43,7 @@ export function andError([msg, ...children]: FullError): FullError {
 }
 
 export function typesAreNotCompatible(property: string, ...children: FullErrorInput[]): FullError {
-  return [`The types of ${property} are not compatible:`, ...children.map(toFullError)];
+  return [`The types of ${property} are not compatible`, ...children.map(toFullError)];
 }
 function toFullError(v: FullErrorInput): FullError {
   return typeof v === 'string' ? [v] : Array.isArray(v) ? v : toFullError(v.fullError || v.message);

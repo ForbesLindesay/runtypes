@@ -39,9 +39,9 @@ test('Intersect can handle object keys being converted', () => {
   expect(NamedURL.safeParse({ name: 'example', url: 'not a url' })).toMatchInlineSnapshot(`
     Object {
       "fullError": Array [
-        "Unable to assign {name: \\"example\\", url: \\"not a url\\"} to { url: URLString; }:",
+        "Unable to assign {name: \\"example\\", url: \\"not a url\\"} to { url: URLString; }",
         Array [
-          "The types of property \\"url\\" are not compatible:",
+          "The types of \\"url\\" are not compatible",
           Array [
             "Expected a valid URL but got 'not a url'",
           ],
@@ -92,9 +92,9 @@ test('Intersect can handle tuple entries being converted', () => {
   expect(NamedURL.safeParse(['example', 'not a url'])).toMatchInlineSnapshot(`
     Object {
       "fullError": Array [
-        "Unable to assign [\\"example\\", \\"not a url\\"] to [unknown, URLString]:",
+        "Unable to assign [\\"example\\", \\"not a url\\"] to [unknown, URLString]",
         Array [
-          "The types of [1] are not compatible:",
+          "The types of [1] are not compatible",
           Array [
             "Expected a valid URL but got 'not a url'",
           ],
