@@ -12,7 +12,6 @@ export { default as showValue } from './showValue';
 export { Array, ReadonlyArray } from './types/array';
 export type { ConstraintCheck } from './types/constraint';
 export { Constraint, Guard } from './types/constraint';
-export { Dictionary } from './types/dictionary';
 export { Enum } from './types/Enum';
 export { InstanceOf } from './types/instanceof';
 export { Intersect } from './types/intersect';
@@ -26,9 +25,5 @@ export { Record } from './types/Record';
 export { Tuple } from './types/tuple';
 export { Union } from './types/union';
 export { Unknown } from './types/unknown';
-/**
- * @deprecated use Unknown
- */
-export { Void } from './types/void';
 export { Brand } from './types/brand';
 export { ParsedValue } from './types/ParsedValue';
