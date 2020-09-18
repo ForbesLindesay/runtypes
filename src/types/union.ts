@@ -13,7 +13,16 @@ import show from '../show';
 import { LiteralValue, isLiteralRuntype } from './literal';
 import { lazyValue, isLazyRuntype } from './lazy';
 import { isObjectRuntype } from './Object';
-import { expected, failure, FullError, Result, success } from '../result';
+import {
+  andError,
+  expected,
+  failure,
+  FullError,
+  Result,
+  success,
+  typesAreNotCompatible,
+  unableToAssign,
+} from '../result';
 import { isTupleRuntype } from './tuple';
 import { isBrandRuntype } from './brand';
 import { isConstraintRuntype } from './constraint';
@@ -79,24 +88,26 @@ export function Union<
             key: `<${tag === 0 ? `[0]` : tag}: ${showValue(value[tag])}>${
               result.key ? `.${result.key}` : ``
             }`,
-            fullError: [
-              `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
-              result.fullError || [result.message],
-            ],
+            fullError: unableToAssign(value, runtype, result),
           });
         }
         return result;
       } else {
-        const message = `Expected ${Array.from(types.keys())
-          .map(v => (typeof v === 'string' ? `'${v}'` : v))
-          .join(' | ')}, but was ${showValue(value[tag])}`;
-        return failure(message, {
-          key: tag === 0 ? `[0]` : tag,
-          fullError: [
-            `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
-            [`The types of [0] are not compatible:`, [message]],
-          ],
-        });
+        const err = expected(
+          Array.from(types.keys())
+            .map(v => (typeof v === 'string' ? `'${v}'` : v))
+            .join(' | '),
+          value,
+          {
+            key: tag === 0 ? `[0]` : tag,
+          },
+        );
+        err.fullError = unableToAssign(
+          value,
+          runtype,
+          typesAreNotCompatible(tag === 0 ? `[0]` : `"${tag}"`, err.message),
+        );
+        return err;
       }
     };
   }
@@ -168,20 +179,13 @@ export function Union<
           return result as Result<TResult>;
         }
         if (!fullError) {
-          fullError = [
-            `Unable to assign ${showValue(value)} to ${show(runtype)}:`,
-            result.fullError || [
-              `Unable to assign ${showValue(value)} to ${show(targetType)}:`,
-              [result.message],
-            ],
-          ];
-        } else {
-          fullError.push(
-            result.fullError || [
-              `And unable to assign ${showValue(value)} to ${show(targetType)}:`,
-              [result.message],
-            ],
+          fullError = unableToAssign(
+            value,
+            runtype,
+            result.fullError || unableToAssign(value, targetType, result),
           );
+        } else {
+          fullError.push(andError(result.fullError || unableToAssign(value, targetType, result)));
         }
         if (result.key) {
           errorsWithKey++;

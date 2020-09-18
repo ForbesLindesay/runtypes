@@ -9,8 +9,7 @@ import {
 import { hasKey } from '../util';
 import show from '../show';
 import { Failure } from '..';
-import { expected, failure, FullError } from '../result';
-import showValue from '../showValue';
+import { expected, failure, FullError, typesAreNotCompatible, unableToAssign } from '../result';
 
 export type RecordFields = { readonly [_: string]: RuntypeBase<unknown> };
 type RecordStaticType<
@@ -89,12 +88,9 @@ export function InternalObject<O extends RecordFields, Part extends boolean, RO 
             let validated = innerValidate(fields[key], value);
             if (!validated.success) {
               if (!fullError) {
-                fullError = [`Unable to assign ${showValue(x)} to ${show(runtype)}:`];
+                fullError = unableToAssign(x, runtype);
               }
-              fullError.push([
-                `The types of property "${key}" are not compatible:`,
-                validated.fullError || [validated.message],
-              ]);
+              fullError.push(typesAreNotCompatible(`"${key}"`, validated));
               firstError =
                 firstError ||
                 failure(validated.message, {

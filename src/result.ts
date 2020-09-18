@@ -12,6 +12,7 @@ export function failure(
 ): Failure {
   return { success: false, message, ...options };
 }
+
 export function expected(
   expected: RuntypeBase | string,
   value: unknown,
@@ -23,6 +24,29 @@ export function expected(
     )}`,
     options,
   );
+}
+
+type FullErrorInput = FullError | Failure | string;
+
+export function unableToAssign(
+  value: unknown,
+  expected: RuntypeBase,
+  ...children: FullErrorInput[]
+): FullError {
+  return [
+    `Unable to assign ${showValue(value)} to ${show(expected)}`,
+    ...children.map(toFullError),
+  ];
+}
+export function andError([msg, ...children]: FullError): FullError {
+  return [`And ${msg[0].toLocaleLowerCase()}${msg.substr(1)}`, ...children];
+}
+
+export function typesAreNotCompatible(property: string, ...children: FullErrorInput[]): FullError {
+  return [`The types of ${property} are not compatible:`, ...children.map(toFullError)];
+}
+function toFullError(v: FullErrorInput): FullError {
+  return typeof v === 'string' ? [v] : Array.isArray(v) ? v : toFullError(v.fullError || v.message);
 }
 
 /**

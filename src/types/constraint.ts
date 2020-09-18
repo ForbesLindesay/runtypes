@@ -1,6 +1,5 @@
-import { failure, success } from '../result';
+import { failure, success, unableToAssign } from '../result';
 import { RuntypeBase, Static, create, Codec, assertRuntype } from '../runtype';
-import show from '../show';
 import showValue from '../showValue';
 import { Unknown } from './unknown';
 
@@ -57,7 +56,7 @@ export function Constraint<
             ? result
             : `${showValue(value)} failed ${name || 'constraint'} check`;
         return failure(message, {
-          fullError: [`Unable to assign ${showValue(value)} to ${show(runtype)}:`, [message]],
+          fullError: unableToAssign(value, runtype, message),
         });
       }
       return success(validated.value as TConstrained);

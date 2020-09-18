@@ -1,4 +1,11 @@
-import { expected, failure, Failure, FullError } from '../result';
+import {
+  expected,
+  failure,
+  Failure,
+  FullError,
+  typesAreNotCompatible,
+  unableToAssign,
+} from '../result';
 import {
   Static,
   create,
@@ -7,8 +14,6 @@ import {
   createValidationPlaceholder,
   assertRuntype,
 } from '../runtype';
-import show from '../show';
-import showValue from '../showValue';
 
 export interface ReadonlyArray<E extends RuntypeBase<unknown> = RuntypeBase<unknown>>
   extends Codec<readonly Static<E>[]> {
@@ -47,12 +52,9 @@ function InternalArr<TElement extends RuntypeBase<unknown>, IsReadonly extends b
           const validated = innerValidate(element, xs[i]);
           if (!validated.success) {
             if (!fullError) {
-              fullError = [`Unable to assign ${showValue(xs)} to ${show(result)}:`];
+              fullError = unableToAssign(xs, result);
             }
-            fullError.push([
-              `The types of [${i}] are not compatible:`,
-              validated.fullError || [validated.message],
-            ]);
+            fullError.push(typesAreNotCompatible(`[${i}]`, validated));
             firstError =
               firstError ||
               failure(validated.message, {
